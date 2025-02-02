@@ -1,0 +1,23 @@
+{
+    "iconName": "router-2d-gen-dark-s",
+    "deviceType": "router",
+    "interfaces": [
+      {
+        "name": "GigabitEthernet0/0",
+        "type": "ethernet"
+      },
+      {
+        "name": "GigabitEthernet0/1",
+        "type": "ethernet"
+      },
+      {
+        "name": "Serial0/0",
+        "type": "serial"
+      },
+      {
+        "name": "Serial0/1",
+        "type": "serial"
+      }
+    ]
+  }
+  

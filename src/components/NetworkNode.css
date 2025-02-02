@@ -1,0 +1,40 @@
+.network-node {
+  padding: 10px 20px;
+  border-radius: 5px;
+  background: white;
+  border: 1px solid #1a192b;
+  cursor: grab;
+  min-width: 150px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.network-node:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.network-node.selected {
+  box-shadow: 0 0 0 2px #1a192b;
+}
+
+/* Handle Styles */
+.handle {
+  width: 8px;
+  height: 8px;
+  background: #1a192b;
+  border-radius: 50%;
+}
+
+.source-handle {
+  background: #4CAF50;
+}
+
+.target-handle {
+  background: #2196F3;
+}
+
+.handle:hover {
+  background: #555;
+}
