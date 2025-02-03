@@ -12,6 +12,7 @@ import {
   Controls,
   NodeOrigin,
   Position,
+  ConnectionMode,
   OnConnectStart,
   OnConnectEnd,
   ConnectStart,
@@ -190,6 +191,7 @@ const NetworkTopology = () => {
             onDragOver={onDragOver}
             nodeTypes={nodeTypes}
             nodeOrigin={nodeOrigin}
+            connectionMode={ConnectionMode.Loose}
             fitView
             defaultEdgeOptions={{
               type: 'default',
