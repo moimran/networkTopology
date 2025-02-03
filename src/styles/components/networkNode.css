@@ -1,0 +1,24 @@
+@import '../variables.css';
+
+/* NetworkNode component styles */
+.network-node {
+  padding: var(--node-padding);
+  border-radius: var(--node-border-radius);
+  background: var(--node-bg-color);
+  border: 1px solid var(--node-border-color);
+  box-shadow: 0 1px 3px var(--node-shadow-color);
+}
+
+.network-node .label {
+  font-size: var(--node-font-size);
+  text-align: center;
+  margin: var(--node-label-margin) 0;
+}
+
+.network-node .handle {
+  width: var(--handle-size);
+  height: var(--handle-size);
+  background: var(--handle-bg-color);
+  border: var(--handle-border-width) solid var(--handle-border-color);
+  box-shadow: 0 1px 2px var(--handle-shadow-color);
+}
