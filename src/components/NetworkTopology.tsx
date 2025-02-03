@@ -6,10 +6,14 @@ import {
   ConnectionMode,
   NodeOrigin,
   Controls,
+  Node,
+  NodeChange,
+  applyNodeChanges,
 } from '@xyflow/react';
 
 import { useNetworkNodes } from '../hooks/useNetworkNodes';
 import { useNetworkEdges } from '../hooks/useNetworkEdges';
+import { useDeviceNodes } from '../hooks/useDeviceNodes';
 import { logger } from '../utils/logger';
 import NetworkNode from './NetworkNode/NetworkNode';
 import Sidebar from './Sidebar';
@@ -28,18 +32,34 @@ const nodeTypes = {
 const nodeOrigin: NodeOrigin = [0.5, 0.5];
 
 /**
+ * Device configuration path
+ */
+const DEVICE_CONFIG_PATH = '/deviceconfigs/router-2d-gen-dark-s.json';
+
+/**
  * NetworkTopology Component
  * 
  * Main component for the network topology visualization.
  * Handles node creation, connection management, and graph visualization.
+ * Supports both basic network nodes and device-configured nodes.
  */
 const NetworkTopology = () => {
   // ReactFlow instance state
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance>();
+  const [nodes, setNodes] = useState<Node[]>([]);
   
   // Custom hooks for managing nodes and edges
-  const { nodes, onNodesChange, createNode } = useNetworkNodes();
+  const { createNode } = useNetworkNodes();
   const { edges, onEdgesChange, onConnect } = useNetworkEdges();
+  const { createDeviceNode, isLoading, error } = useDeviceNodes(DEVICE_CONFIG_PATH);
+
+  /**
+   * Handle node changes (position, selection, etc.)
+   */
+  const handleNodesChange = useCallback((changes: NodeChange[]) => {
+    setNodes((nds) => applyNodeChanges(changes, nds));
+    logger.debug('Nodes changed', { changes });
+  }, []);
 
   /**
    * Initialize ReactFlow instance
@@ -69,9 +89,30 @@ const NetworkTopology = () => {
         y: event.clientY,
       });
 
-      createNode(position);
+      // Check if this is a device node drop
+      const isDeviceNode = event.dataTransfer.getData('application/devicenode') === 'true';
+      
+      if (isDeviceNode) {
+        const newNode = createDeviceNode(position);
+        if (newNode) {
+          logger.debug('Creating new device node', newNode);
+          setNodes(nds => [...nds, newNode]);
+        }
+      } else {
+        const newNode = createNode(position);
+        setNodes(nds => [...nds, newNode]);
+      }
     }
-  }, [reactFlowInstance, createNode]);
+  }, [reactFlowInstance, createNode, createDeviceNode]);
+
+  if (isLoading) {
+    return <div>Loading device configuration...</div>;
+  }
+
+  if (error) {
+    logger.error('Error loading device configuration', error);
+    return <div>Error loading device configuration: {error.message}</div>;
+  }
 
   return (
     <div className="network-topology">
@@ -80,7 +121,7 @@ const NetworkTopology = () => {
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
+            onNodesChange={handleNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onInit={onInit}

@@ -10,6 +10,11 @@
 .network-flow-wrapper {
   flex-grow: 1;
   height: 100%;
+  cursor: grab;
+}
+
+.network-flow-wrapper:active {
+  cursor: grabbing;
 }
 
 /* Sidebar styles */
@@ -22,6 +27,7 @@
 
 /* ReactFlow customizations */
 .react-flow__node {
+  cursor: move;
   border-radius: var(--node-border-radius);
   transition: box-shadow 0.2s ease;
 }
@@ -30,10 +36,42 @@
   box-shadow: 0 4px 8px var(--node-shadow-color);
 }
 
+.react-flow__node.selected {
+  box-shadow: 0 0 0 2px var(--edge-selected-color);
+}
+
+.react-flow__node:active {
+  cursor: grabbing;
+}
+
+.react-flow__handle {
+  cursor: crosshair;
+}
+
 .react-flow__edge {
   stroke: var(--edge-color);
 }
 
 .react-flow__edge.selected {
   stroke: var(--edge-selected-color);
+}
+
+/* Controls customization */
+.react-flow__controls {
+  box-shadow: 0 2px 4px var(--node-shadow-color);
+  border-radius: var(--node-border-radius);
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  background: var(--node-bg-color);
+  border-color: var(--node-border-color);
+  color: var(--node-border-color);
+  transition: all 0.2s ease;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--device-handle-bg-color);
+  border-color: var(--device-handle-bg-color);
+  color: white;
 }

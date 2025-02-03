@@ -3,20 +3,28 @@
     "deviceType": "router",
     "interfaces": [
       {
-        "name": "GigabitEthernet0/0",
-        "type": "ethernet"
+        "interfaceName": "GigabitEthernet0/0",
+        "interfaceType": "ethernet"
       },
       {
-        "name": "GigabitEthernet0/1",
-        "type": "ethernet"
+        "interfaceName": "GigabitEthernet0/1",
+        "interfaceType": "ethernet"
       },
       {
-        "name": "Serial0/0",
-        "type": "serial"
+        "interfaceName": "GigabitEthernet0/2",
+        "interfaceType": "ethernet"
       },
       {
-        "name": "Serial0/1",
-        "type": "serial"
+        "interfaceName": "GigabitEthernet0/3",
+        "interfaceType": "ethernet"
+      },
+      {
+        "interfaceName": "Serial0/0",
+        "interfaceType": "serial"
+      },
+      {
+        "interfaceName": "Serial0/1",
+        "interfaceType": "serial"
       }
     ]
   }

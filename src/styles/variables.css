@@ -11,6 +11,15 @@
   --border-color: #eee;
   --sidebar-bg-color: #f8f8f8;
   
+  /* Device Node Colors */
+  --device-node-bg-color: #2b2b3b;
+  --device-node-border-color: #3d3d4d;
+  --device-node-text-color: #ffffff;
+  --device-info-text-color: #b4b4c4;
+  --device-handle-bg-color: #6366f1;
+  --device-handle-border-color: #ffffff;
+  --device-handle-hover-bg-color: #818cf8;
+  
   /* Sizes */
   --node-padding: 10px;
   --node-border-radius: 5px;

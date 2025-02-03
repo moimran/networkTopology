@@ -1,38 +1,46 @@
 import { useCallback } from 'react';
-import { Node, useNodesState, XYPosition } from '@xyflow/react';
-import { DEFAULT_NODE_CONFIG, generateNodeId } from '../config/nodeConfig';
+import { Node, NodeChange, XYPosition, applyNodeChanges } from '@xyflow/react';
+import { generateNodeId } from '../config/nodeConfig';
 import { logger } from '../utils/logger';
 
 /**
  * Custom hook for managing network nodes
  */
 export const useNetworkNodes = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
+  /**
+   * Handle node changes (position, selection, etc.)
+   */
+  const onNodesChange = useCallback((changes: NodeChange[], nodes: Node[]) => {
+    logger.debug('Node changes', { changes });
+    return applyNodeChanges(changes, nodes);
+  }, []);
 
   /**
-   * Create a new network node
+   * Create a new basic network node
    */
-  const createNode = useCallback((position: XYPosition) => {
+  const createNode = useCallback((position: XYPosition): Node => {
     const nodeId = generateNodeId();
-    logger.debug('Creating new node', { nodeId, position });
-
+    
     const newNode: Node = {
       id: nodeId,
       type: 'networkNode',
       position,
       data: {
-        label: `${DEFAULT_NODE_CONFIG.label} ${nodeId}`,
-        handles: DEFAULT_NODE_CONFIG.handles,
+        label: `Node ${nodeId}`,
+        handles: {
+          right: { type: 'source', position: 2 },
+          bottom: { type: 'source', position: 3 },
+        },
       },
+      draggable: true, // Enable node dragging
+      selectable: true, // Enable node selection
     };
 
-    setNodes((nds) => nds.concat(newNode));
+    logger.debug('Created basic network node', newNode);
     return newNode;
-  }, [setNodes]);
+  }, []);
 
   return {
-    nodes,
-    setNodes,
     onNodesChange,
     createNode,
   };

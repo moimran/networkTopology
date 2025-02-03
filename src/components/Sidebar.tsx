@@ -1,30 +1,47 @@
 import { DragEvent } from 'react';
-import './Sidebar.css';
+import { logger } from '../utils/logger';
+import '../styles/components/sidebar.css';
 
-// Define the onDragStart handler
-const onDragStart = (event: DragEvent, nodeType: string) => {
-  // Set the node type as transfer data
-  event.dataTransfer.setData('application/networknode', nodeType);
-  event.dataTransfer.effectAllowed = 'move';
-};
-
+/**
+ * Sidebar Component
+ * 
+ * Provides draggable elements for creating new nodes in the network topology.
+ */
 const Sidebar = () => {
+  /**
+   * Handle the start of a drag operation
+   */
+  const onDragStart = (event: DragEvent, nodeType: string) => {
+    logger.debug('Starting drag operation', { nodeType });
+    
+    if (nodeType === 'device') {
+      event.dataTransfer.setData('application/devicenode', 'true');
+    } else {
+      event.dataTransfer.setData('application/devicenode', 'false');
+    }
+  };
+
   return (
     <aside className="sidebar">
-      <div className="sidebar-description">
-        Drag and drop nodes to create your network topology
+      <div className="description">
+        Drag and drop nodes to the canvas
       </div>
       
-      {/* Network Node */}
       <div
-        className="network-node-item"
-        onDragStart={(event: DragEvent) => onDragStart(event, 'networkNode')}
+        className="dndnode"
+        onDragStart={(event) => onDragStart(event, 'default')}
         draggable
       >
         Network Node
       </div>
       
-      {/* You can add more node types here */}
+      <div
+        className="dndnode device"
+        onDragStart={(event) => onDragStart(event, 'device')}
+        draggable
+      >
+        Device Node
+      </div>
     </aside>
   );
 };

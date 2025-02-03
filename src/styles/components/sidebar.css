@@ -1,0 +1,38 @@
+@import '../variables.css';
+
+.sidebar {
+  width: var(--sidebar-width);
+  padding: var(--sidebar-padding);
+  background: var(--sidebar-bg-color);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.dndnode {
+  padding: 12px;
+  border: 1px solid var(--node-border-color);
+  border-radius: var(--node-border-radius);
+  margin-bottom: 8px;
+  background: white;
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.dndnode:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.dndnode.device {
+  background: var(--device-node-bg-color);
+  color: var(--device-node-text-color);
+  border-color: var(--device-node-border-color);
+}
