@@ -11,9 +11,8 @@ import {
   applyNodeChanges,
 } from '@xyflow/react';
 
-import { useNetworkNodes } from '../hooks/useNetworkNodes';
-import { useNetworkEdges } from '../hooks/useNetworkEdges';
 import { useDeviceNodes } from '../hooks/useDeviceNodes';
+import { useNetworkEdges } from '../hooks/useNetworkEdges';
 import { logger } from '../utils/logger';
 import NetworkNode from './NetworkNode/NetworkNode';
 import Sidebar from './Sidebar';
@@ -40,8 +39,7 @@ const DEVICE_CONFIG_PATH = '/deviceconfigs/router-2d-gen-dark-s.json';
  * NetworkTopology Component
  * 
  * Main component for the network topology visualization.
- * Handles node creation, connection management, and graph visualization.
- * Supports both basic network nodes and device-configured nodes.
+ * Handles device node creation, connection management, and graph visualization.
  */
 const NetworkTopology = () => {
   // ReactFlow instance state
@@ -49,7 +47,6 @@ const NetworkTopology = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   
   // Custom hooks for managing nodes and edges
-  const { createNode } = useNetworkNodes();
   const { edges, onEdgesChange, onConnect } = useNetworkEdges();
   const { createDeviceNode, isLoading, error } = useDeviceNodes(DEVICE_CONFIG_PATH);
 
@@ -89,21 +86,13 @@ const NetworkTopology = () => {
         y: event.clientY,
       });
 
-      // Check if this is a device node drop
-      const isDeviceNode = event.dataTransfer.getData('application/devicenode') === 'true';
-      
-      if (isDeviceNode) {
-        const newNode = createDeviceNode(position);
-        if (newNode) {
-          logger.debug('Creating new device node', newNode);
-          setNodes(nds => [...nds, newNode]);
-        }
-      } else {
-        const newNode = createNode(position);
+      const newNode = createDeviceNode(position);
+      if (newNode) {
+        logger.debug('Creating new device node', newNode);
         setNodes(nds => [...nds, newNode]);
       }
     }
-  }, [reactFlowInstance, createNode, createDeviceNode]);
+  }, [reactFlowInstance, createDeviceNode]);
 
   if (isLoading) {
     return <div>Loading device configuration...</div>;

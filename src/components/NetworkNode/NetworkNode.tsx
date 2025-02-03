@@ -1,11 +1,8 @@
 import { memo, useEffect } from 'react';
 import { Handle, NodeProps, Position } from '@xyflow/react';
-import { NetworkNodeData } from '../../types/network';
 import { DeviceNodeData } from '../../types/device';
 import { logger } from '../../utils/logger';
 import '../../styles/components/networkNode.css';
-
-type NodeData = NetworkNodeData | DeviceNodeData;
 
 // Calculate handle style based on position and index
 const getHandleStyle = (position: Position, index: number, total: number) => {
@@ -49,10 +46,10 @@ const getHandleStyle = (position: Position, index: number, total: number) => {
 /**
  * NetworkNode Component
  * 
- * A customizable node component for the network topology graph.
- * Supports both basic network nodes and device-configured nodes.
+ * A node component for the network topology graph that displays device information
+ * and handles based on the device configuration.
  */
-const NetworkNode = ({ data, id }: NodeProps<NodeData>) => {
+const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
   // Initialize handles
   const handles = data.handles || {};
   const handleCount = Object.keys(handles).length;
@@ -67,34 +64,28 @@ const NetworkNode = ({ data, id }: NodeProps<NodeData>) => {
     return acc;
   }, {} as Record<Position, Array<{ id: string; position: Position; interface: any }>>);
 
-  // Check if this is a device node
-  const isDeviceNode = 'config' in data;
-  
   useEffect(() => {
-    if (isDeviceNode) {
-      logger.debug('Device node handles', {
-        id,
-        deviceName: data.config.deviceName,
-        handleCount,
-        handles: Object.keys(handles).map(key => ({
-          id: key,
-          position: handles[key].position,
-          type: handles[key].interface.interfaceType
-        }))
-      });
-    }
-  }, [id, isDeviceNode, handles, data]);
+    logger.debug('Device node handles', {
+      id,
+      deviceName: data.config.deviceName,
+      handleCount,
+      handles: Object.keys(handles).map(key => ({
+        id: key,
+        position: handles[key].position,
+        type: handles[key].interface.interfaceType
+      }))
+    });
+  }, [id, handles, data]);
 
   logger.debug('Rendering network node', { 
     id, 
-    isDeviceNode, 
     handles,
-    interfaceCount: isDeviceNode ? Object.keys(handles).length : 0,
-    config: isDeviceNode ? data.config : undefined 
+    interfaceCount: Object.keys(handles).length,
+    config: data.config 
   });
 
   return (
-    <div className={`network-node ${isDeviceNode ? 'device-node' : ''}`}>
+    <div className="device-node">
       {/* Render handles grouped by position */}
       {Object.entries(handlesByPosition).map(([position, positionHandles]) => (
         positionHandles.map((handle, index) => {
@@ -107,36 +98,34 @@ const NetworkNode = ({ data, id }: NodeProps<NodeData>) => {
               type="source"
               position={handle.position}
               style={style}
-              className={`handle ${isDeviceNode ? 'device-handle' : ''}`}
+              className="device-handle"
               isConnectable={true}
-              title={isDeviceNode ? `${handle.interface.interfaceName} (${handle.interface.interfaceType})` : undefined}
-              data-interface={isDeviceNode ? handle.interface.interfaceName : undefined}
-              data-type={isDeviceNode ? handle.interface.interfaceType : undefined}
+              title={`${handle.interface.interfaceName} (${handle.interface.interfaceType})`}
+              data-interface={handle.interface.interfaceName}
+              data-type={handle.interface.interfaceType}
             />
           );
         })
       ))}
       
       {/* Node label */}
-      <div className="label">{data.label || `Node ${id}`}</div>
+      <div className="label">{data.label || data.config.deviceName}</div>
       
-      {/* Device info (if device node) */}
-      {isDeviceNode && (
-        <div className="device-info">
-          <div className="device-type">{data.config.deviceType}</div>
-          <div className="interface-count">
-            Interfaces: {data.config.interfaces.length}
-          </div>
-          <div className="interface-list">
-            {data.config.interfaces.map((iface) => (
-              <div key={iface.interfaceName} className="interface-item">
-                <span className="interface-name">{iface.interfaceName}</span>
-                <span className="interface-type">({iface.interfaceType})</span>
-              </div>
-            ))}
-          </div>
+      {/* Device info */}
+      <div className="device-info">
+        <div className="device-type">{data.config.deviceType}</div>
+        <div className="interface-count">
+          Interfaces: {data.config.interfaces.length}
         </div>
-      )}
+        <div className="interface-list">
+          {data.config.interfaces.map((iface) => (
+            <div key={iface.interfaceName} className="interface-item">
+              <span className="interface-name">{iface.interfaceName}</span>
+              <span className="interface-type">({iface.interfaceType})</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

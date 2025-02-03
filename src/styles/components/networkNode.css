@@ -1,63 +1,44 @@
 @import '../variables.css';
 
 /* Node container */
-.network-node {
+.device-node {
   padding: var(--node-padding);
   border-radius: var(--node-border-radius);
-  border: 1px solid var(--node-border-color);
-  background: var(--node-bg-color);
-  color: var(--node-text-color);
-  min-width: 150px;
-  min-height: 60px;
-  position: relative;
-}
-
-/* Device node specific styles */
-.network-node.device-node {
-  border-color: var(--device-node-border-color);
+  border: 1px solid var(--device-node-border-color);
   background: var(--device-node-bg-color);
   color: var(--device-node-text-color);
   min-width: 200px;
   min-height: 80px;
+  position: relative;
 }
 
 /* Handle styles */
-.network-node .handle {
+.device-handle {
   width: 8px !important;
   height: 8px !important;
-  background: var(--handle-bg-color) !important;
-  border: 1px solid var(--handle-border-color) !important;
+  background: var(--device-handle-bg-color) !important;
+  border: 1px solid var(--device-handle-border-color) !important;
   transition: all 0.2s ease;
   cursor: crosshair;
 }
 
-.network-node .handle:hover {
+.device-handle:hover {
   width: 10px !important;
   height: 10px !important;
-  background: var(--handle-hover-bg-color) !important;
-  border-color: var(--handle-hover-border-color) !important;
+  background: var(--device-handle-hover-bg-color) !important;
+  border-color: var(--device-handle-hover-border-color) !important;
   transform: scale(1.2);
 }
 
-.network-node.device-node .handle.device-handle {
-  background: var(--device-handle-bg-color) !important;
-  border-color: var(--device-handle-border-color) !important;
-}
-
-.network-node.device-node .handle.device-handle:hover {
-  background: var(--device-handle-hover-bg-color) !important;
-  border-color: var(--device-handle-hover-border-color) !important;
-}
-
 /* Node content */
-.network-node .label {
+.device-node .label {
   font-weight: bold;
   text-align: center;
   margin-bottom: 8px;
   font-size: var(--node-font-size);
 }
 
-.network-node.device-node .device-info {
+.device-node .device-info {
   font-size: 0.9em;
   margin-top: 8px;
   color: var(--device-info-text-color);
@@ -65,21 +46,21 @@
   border-top: 1px solid var(--device-node-border-color);
 }
 
-.network-node.device-node .device-type {
+.device-node .device-type {
   font-style: italic;
   color: var(--device-type-color);
   margin-bottom: 4px;
   font-weight: 500;
 }
 
-.network-node.device-node .interface-count {
+.device-node .interface-count {
   font-size: 0.85em;
   color: var(--interface-count-color);
   margin-bottom: 4px;
   opacity: 0.8;
 }
 
-.network-node.device-node .interface-list {
+.device-node .interface-list {
   max-height: 120px;
   overflow-y: auto;
   font-size: 0.85em;
@@ -88,41 +69,42 @@
   border-radius: 4px;
 }
 
-.network-node.device-node .interface-item {
+.device-node .interface-item {
   display: flex;
   justify-content: space-between;
   padding: 2px 4px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.network-node.device-node .interface-item:last-child {
+.device-node .interface-item:last-child {
   border-bottom: none;
 }
 
-.network-node.device-node .interface-name {
+.device-node .interface-name {
   font-weight: 500;
   color: var(--device-node-text-color);
 }
 
-.network-node.device-node .interface-type {
+.device-node .interface-type {
   color: var(--interface-type-color);
   font-size: 0.9em;
 }
 
 /* Custom scrollbar for interface list */
-.network-node.device-node .interface-list::-webkit-scrollbar {
-  width: 4px;
+.device-node .interface-list::-webkit-scrollbar {
+  width: 6px;
 }
 
-.network-node.device-node .interface-list::-webkit-scrollbar-track {
-  background: var(--device-node-bg-color);
+.device-node .interface-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
 }
 
-.network-node.device-node .interface-list::-webkit-scrollbar-thumb {
+.device-node .interface-list::-webkit-scrollbar-thumb {
   background: var(--device-node-border-color);
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
-.network-node.device-node .interface-list::-webkit-scrollbar-thumb:hover {
+.device-node .interface-list::-webkit-scrollbar-thumb:hover {
   background: var(--device-handle-bg-color);
 }
