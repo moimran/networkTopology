@@ -38,9 +38,24 @@ const NetworkTopology = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [connectionStartHandle, setConnectionStartHandle] = useState<{ nodeId: string, handleId: string } | null>(null);
 
+  // Helper function to check if a handle is already connected
+  const isHandleConnected = useCallback((nodeId: string, handleId: string) => {
+    return edges.some(
+      edge => 
+        (edge.source === nodeId && edge.sourceHandle === handleId) ||
+        (edge.target === nodeId && edge.targetHandle === handleId)
+    );
+  }, [edges]);
+
   // Helper function to update handle types
   const updateNodeHandles = useCallback((nodeId: string, handleId: string, type: 'source' | 'target') => {
     console.log('🔄 Updating handle:', { nodeId, handleId, type });
+    
+    // Don't update if the handle is already connected
+    if (isHandleConnected(nodeId, handleId)) {
+      console.log('🔒 Handle is already connected, preserving its state:', { nodeId, handleId });
+      return;
+    }
     
     setNodes((nds) =>
       nds.map((node) => {
@@ -68,7 +83,7 @@ const NetworkTopology = () => {
         return node;
       })
     );
-  }, [setNodes]);
+  }, [setNodes, isHandleConnected]);
 
   const onConnectStart: OnConnectStart = useCallback((event: any, { nodeId, handleId }) => {
     console.log('🎯 Connection start:', { nodeId, handleId });
@@ -83,28 +98,32 @@ const NetworkTopology = () => {
   const onNodeMouseEnter = useCallback((event: React.MouseEvent, node: Node) => {
     if (connectionStartHandle && connectionStartHandle.nodeId !== node.id) {
       console.log('🎯 Node mouse enter during connection:', node.id);
-      // Update all handles of the target node to be of type 'target'
+      // Update only unconnected handles of the target node to be of type 'target'
       const nodeData = node.data;
       if (nodeData.handles) {
         Object.keys(nodeData.handles).forEach(handleId => {
-          updateNodeHandles(node.id, handleId, 'target');
+          if (!isHandleConnected(node.id, handleId)) {
+            updateNodeHandles(node.id, handleId, 'target');
+          }
         });
       }
     }
-  }, [connectionStartHandle, updateNodeHandles]);
+  }, [connectionStartHandle, updateNodeHandles, isHandleConnected]);
 
   const onNodeMouseLeave = useCallback((event: React.MouseEvent, node: Node) => {
     if (connectionStartHandle && connectionStartHandle.nodeId !== node.id) {
       console.log('🎯 Node mouse leave during connection:', node.id);
-      // Reset handles back to source type when mouse leaves
+      // Reset only unconnected handles back to source type when mouse leaves
       const nodeData = node.data;
       if (nodeData.handles) {
         Object.keys(nodeData.handles).forEach(handleId => {
-          updateNodeHandles(node.id, handleId, 'source');
+          if (!isHandleConnected(node.id, handleId)) {
+            updateNodeHandles(node.id, handleId, 'source');
+          }
         });
       }
     }
-  }, [connectionStartHandle, updateNodeHandles]);
+  }, [connectionStartHandle, updateNodeHandles, isHandleConnected]);
 
   // Handle new connections
   const onConnect = useCallback((connection: Connection) => {
