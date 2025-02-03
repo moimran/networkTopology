@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Node, XYPosition, Position } from '@xyflow/react';
+import { Node, XYPosition } from '@xyflow/react';
 import { DeviceConfig } from '../types/device';
 import { calculateHandlePositions, loadDeviceConfig } from '../utils/deviceUtils';
 import { generateNodeId } from '../config/nodeConfig';

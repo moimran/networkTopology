@@ -1,12 +1,12 @@
 import { Position } from '@xyflow/react';
-import { DeviceConfig, DeviceInterface } from '../types/device';
+import { DeviceConfig, NetworkInterface } from '../types/device';
 import { logger } from './logger';
 
 /**
  * Calculate handle positions for device interfaces
  * Distributes handles evenly around the node based on the number of interfaces
  */
-export const calculateHandlePositions = (interfaces: DeviceInterface[]) => {
+export const calculateHandlePositions = (interfaces: NetworkInterface[]) => {
   const interfaceCount = interfaces.length;
   
   // Calculate angles for each interface
