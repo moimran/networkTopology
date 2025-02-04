@@ -21,6 +21,8 @@ import { logger } from '../utils/logger';
 import NetworkNode from './NetworkNode/NetworkNode';
 import Sidebar from './Sidebar';
 import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
+import FloatingEdge from './FloatingEdge/FloatingEdge';
+import './FloatingEdge/FloatingEdge.css';
 import '../styles/components/networkTopology.css';
 
 /**
@@ -28,6 +30,13 @@ import '../styles/components/networkTopology.css';
  */
 const nodeTypes = {
   networkNode: NetworkNode,
+};
+
+/**
+ * Edge types configuration
+ */
+const edgeTypes = {
+  floating: FloatingEdge,
 };
 
 /**
@@ -190,7 +199,11 @@ const NetworkTopology = () => {
         sourceHandle: pendingConnection.sourceInterface,
         target: selectedNode,
         targetHandle: interfaceName,
-        type: 'default',
+        type: 'floating',
+        data: {
+          sourceInterface: pendingConnection.sourceInterface,
+          targetInterface: interfaceName,
+        },
       };
 
       setEdges(edges => [...edges, newEdge]);
@@ -233,11 +246,12 @@ const NetworkTopology = () => {
             onDragOver={onDragOver}
             onNodeContextMenu={onNodeContextMenu}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             nodeOrigin={nodeOrigin}
             connectionMode={ConnectionMode.Loose}
             fitView
             defaultEdgeOptions={{
-              type: 'default',
+              type: 'floating',
               animated: true
             }}
           >
