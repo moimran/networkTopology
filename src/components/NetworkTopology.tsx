@@ -20,7 +20,7 @@ import { useNetworkEdges } from '../hooks/useNetworkEdges';
 import { logger } from '../utils/logger';
 import NetworkNode from './NetworkNode/NetworkNode';
 import Sidebar from './Sidebar';
-import InterfaceContextMenu from './InterfaceContextMenu/InterfaceContextMenu';
+import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
 import '../styles/components/networkTopology.css';
 
 /**
@@ -57,8 +57,8 @@ const NetworkTopology = () => {
   const { edges, onEdgesChange, setEdges } = useNetworkEdges();
   const { createDeviceNode, isLoading, error } = useDeviceNodes(DEVICE_CONFIG_PATH);
 
-  // Context menu state
-  const [contextMenu, setContextMenu] = useState<{
+  // Interface select modal state
+  const [interfaceModal, setInterfaceModal] = useState<{
     show: boolean;
     position: { x: number; y: number };
     nodeId: string | null;
@@ -124,19 +124,19 @@ const NetworkTopology = () => {
     }
   }, [reactFlowInstance, createDeviceNode]);
 
-  // Handle node context menu
+  // Handle node interface selection
   const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
     event.preventDefault();
     event.stopPropagation();
     
-    logger.debug('Node context menu', { 
+    logger.debug('Node interface selection', { 
       nodeId: node.id, 
       position: { x: event.clientX, y: event.clientY },
       data: node.data,
       pendingConnection
     });
 
-    setContextMenu({
+    setInterfaceModal({
       show: true,
       position: {
         x: event.clientX,
@@ -147,9 +147,9 @@ const NetworkTopology = () => {
     });
   }, [pendingConnection]);
 
-  // Handle interface selection from context menu
+  // Handle interface selection from modal
   const onInterfaceSelect = useCallback((interfaceName: string) => {
-    const selectedNode = contextMenu.nodeId;
+    const selectedNode = interfaceModal.nodeId;
     if (!selectedNode) return;
 
     if (!pendingConnection) {
@@ -206,9 +206,9 @@ const NetworkTopology = () => {
       })));
     }
 
-    // Hide the context menu
-    setContextMenu(prev => ({ ...prev, show: false }));
-  }, [contextMenu.nodeId, pendingConnection, setEdges]);
+    // Hide the modal
+    setInterfaceModal(prev => ({ ...prev, show: false }));
+  }, [interfaceModal.nodeId, pendingConnection, setEdges]);
 
   if (isLoading) {
     return <div>Loading device configuration...</div>;
@@ -245,13 +245,13 @@ const NetworkTopology = () => {
             <Controls />
           </ReactFlow>
 
-          {/* Render context menu at ReactFlow level */}
-          {contextMenu.show && (
-            <InterfaceContextMenu
-              interfaces={contextMenu.interfaces}
-              position={contextMenu.position}
+          {/* Render interface select modal */}
+          {interfaceModal.show && (
+            <InterfaceSelectModal
+              interfaces={interfaceModal.interfaces}
+              position={interfaceModal.position}
               onSelect={onInterfaceSelect}
-              onClose={() => setContextMenu(prev => ({ ...prev, show: false }))}
+              onClose={() => setInterfaceModal(prev => ({ ...prev, show: false }))}
             />
           )}
         </div>
