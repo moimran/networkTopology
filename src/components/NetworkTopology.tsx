@@ -22,6 +22,7 @@ import NetworkNode from './NetworkNode/NetworkNode';
 import Sidebar from './Sidebar';
 import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
 import FloatingEdge from './FloatingEdge/FloatingEdge';
+import Toolbar from './Toolbar/Toolbar';
 import './FloatingEdge/FloatingEdge.css';
 import '../styles/components/networkTopology.css';
 
@@ -59,8 +60,10 @@ const NetworkTopology = () => {
   // Reference to the ReactFlow instance
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   // ReactFlow instance state
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance>();
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [nodes, setNodes] = useState<Node[]>([]);
+  const [currentEdgeType, setCurrentEdgeType] = useState('straight');
+  const [showLabels, setShowLabels] = useState(false);
   
   // Custom hooks for managing nodes and edges
   const { edges, onEdgesChange, setEdges } = useNetworkEdges();
@@ -201,8 +204,10 @@ const NetworkTopology = () => {
         targetHandle: interfaceName,
         type: 'floating',
         data: {
+          edgeType: currentEdgeType,
           sourceInterface: pendingConnection.sourceInterface,
           targetInterface: interfaceName,
+          showLabels: showLabels,
         },
       };
 
@@ -221,7 +226,23 @@ const NetworkTopology = () => {
 
     // Hide the modal
     setInterfaceModal(prev => ({ ...prev, show: false }));
-  }, [interfaceModal.nodeId, pendingConnection, setEdges]);
+  }, [interfaceModal.nodeId, pendingConnection, setEdges, currentEdgeType, showLabels]);
+
+  const handleToggleLabels = useCallback(() => {
+    setShowLabels(prev => {
+      const newShowLabels = !prev;
+      // Update all existing edges with new label visibility
+      const updatedEdges = edges.map(edge => ({
+        ...edge,
+        data: {
+          ...edge.data,
+          showLabels: newShowLabels,
+        },
+      }));
+      setEdges(updatedEdges);
+      return newShowLabels;
+    });
+  }, [edges, setEdges]);
 
   if (isLoading) {
     return <div>Loading device configuration...</div>;
@@ -236,6 +257,11 @@ const NetworkTopology = () => {
     <div className="network-topology">
       <ReactFlowProvider>
         <div className="network-flow-wrapper" ref={reactFlowWrapper}>
+          <Toolbar 
+            onEdgeTypeChange={setCurrentEdgeType} 
+            showLabels={showLabels}
+            onToggleLabels={handleToggleLabels}
+          />
           <ReactFlow
             nodes={nodes}
             edges={edges}

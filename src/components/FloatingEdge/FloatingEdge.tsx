@@ -1,11 +1,13 @@
 import { CSSProperties } from 'react';
-import { EdgeProps, useStore, getBezierPath } from '@xyflow/react';
+import { EdgeProps, useStore, getBezierPath, getStraightPath, getSmoothStepPath } from '@xyflow/react';
 import { getEdgeParams } from '../../utils/edgeUtils';
 import { logger } from '../../utils/logger';
 
 export type FloatingEdgeData = {
+  edgeType?: string;
   sourceInterface?: string;
   targetInterface?: string;
+  showLabels?: boolean;
 };
 
 function FloatingEdge({ id, source, target, style, data }: EdgeProps<FloatingEdgeData>) {
@@ -19,14 +21,51 @@ function FloatingEdge({ id, source, target, style, data }: EdgeProps<FloatingEdg
 
   const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(sourceNode, targetNode);
 
-  const [path] = getBezierPath({
-    sourceX: sx,
-    sourceY: sy,
-    sourcePosition: sourcePos,
-    targetPosition: targetPos,
-    targetX: tx,
-    targetY: ty,
-  });
+  let path = '';
+  const edgeType = data?.edgeType || 'default';
+
+  // Get path based on edge type
+  switch (edgeType) {
+    case 'straight':
+      [path] = getStraightPath({
+        sourceX: sx,
+        sourceY: sy,
+        targetX: tx,
+        targetY: ty,
+      });
+      break;
+    case 'step':
+      [path] = getSmoothStepPath({
+        sourceX: sx,
+        sourceY: sy,
+        sourcePosition: sourcePos,
+        targetPosition: targetPos,
+        targetX: tx,
+        targetY: ty,
+        borderRadius: 0,
+      });
+      break;
+    case 'smoothstep':
+      [path] = getSmoothStepPath({
+        sourceX: sx,
+        sourceY: sy,
+        sourcePosition: sourcePos,
+        targetPosition: targetPos,
+        targetX: tx,
+        targetY: ty,
+        borderRadius: 10,
+      });
+      break;
+    default:
+      [path] = getBezierPath({
+        sourceX: sx,
+        sourceY: sy,
+        sourcePosition: sourcePos,
+        targetPosition: targetPos,
+        targetX: tx,
+        targetY: ty,
+      });
+  }
 
   // Calculate the middle point for label positioning
   const labelX = (sx + tx) / 2;
@@ -46,7 +85,7 @@ function FloatingEdge({ id, source, target, style, data }: EdgeProps<FloatingEdg
           } as CSSProperties} 
         />
       </g>
-      {data?.sourceInterface && data?.targetInterface && (
+      {data?.showLabels && data?.sourceInterface && data?.targetInterface && (
         <foreignObject
           width={200}
           height={40}
