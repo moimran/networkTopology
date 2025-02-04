@@ -8,6 +8,7 @@ import '../../styles/components/networkNode.css';
 const getHandleStyle = (position: Position, index: number, total: number) => {
   const baseStyle: React.CSSProperties = {
     position: 'absolute',
+    opacity: 0, // Hide handles by default
   };
 
   // Calculate percentage along the edge based on position and number of handles
@@ -64,6 +65,11 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
     return acc;
   }, {} as Record<Position, Array<{ id: string; position: Position; interface: any }>>);
 
+  // Get the selected handle ID based on the selected interface name
+  const selectedHandleId = Object.entries(handles).find(
+    ([_, handle]) => handle.interface.interfaceName === data.selectedInterface
+  )?.[0];
+
   useEffect(() => {
     logger.debug('Device node handles', {
       id,
@@ -77,19 +83,13 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
     });
   }, [id, handles, data]);
 
-  logger.debug('Rendering network node', { 
-    id, 
-    handles,
-    interfaceCount: Object.keys(handles).length,
-    config: data.config 
-  });
-
   return (
     <div className="device-node">
       {/* Render handles grouped by position */}
       {Object.entries(handlesByPosition).map(([position, positionHandles]) => (
         positionHandles.map((handle, index) => {
           const style = getHandleStyle(handle.position as Position, index, positionHandles.length);
+          const isSelected = handle.id === selectedHandleId;
           
           return (
             <Handle
@@ -97,7 +97,10 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
               id={handle.id}
               type="source"
               position={handle.position}
-              style={style}
+              style={{
+                ...style,
+                opacity: isSelected ? 1 : 0, // Show only selected handle
+              }}
               className="device-handle"
               isConnectable={true}
               title={`${handle.interface.interfaceName} (${handle.interface.interfaceType})`}
