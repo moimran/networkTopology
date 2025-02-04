@@ -74,12 +74,10 @@ const NetworkTopology = () => {
     show: boolean;
     position: { x: number; y: number };
     nodeId: string | null;
-    interfaces: any[];
   }>({
     show: false,
     position: { x: 0, y: 0 },
     nodeId: null,
-    interfaces: [],
   });
 
   // Connection state
@@ -137,27 +135,30 @@ const NetworkTopology = () => {
   }, [reactFlowInstance, createDeviceNode]);
 
   // Handle node interface selection
-  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    logger.debug('Node interface selection', { 
-      nodeId: node.id, 
-      position: { x: event.clientX, y: event.clientY },
-      data: node.data,
-      pendingConnection
-    });
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      // Prevent native context menu from showing
+      event.preventDefault();
 
-    setInterfaceModal({
-      show: true,
-      position: {
-        x: event.clientX,
-        y: event.clientY,
-      },
-      nodeId: node.id,
-      interfaces: node.data.config.interfaces,
-    });
-  }, [pendingConnection]);
+      // Get the node's DOM element
+      const nodeElement = event.currentTarget as HTMLDivElement;
+      const nodeBounds = nodeElement.getBoundingClientRect();
+
+      // Position the modal overlapping slightly with the node's right side
+      const position = {
+        x: nodeBounds.right - 10, // Move modal more to the left to overlap
+        y: nodeBounds.bottom - 40, // Position near the top of the node
+      };
+
+      // Show our custom context menu
+      setInterfaceModal({
+        show: true,
+        position,
+        nodeId: node.id,
+      });
+    },
+    []
+  );
 
   // Handle interface selection from modal
   const onInterfaceSelect = useCallback((interfaceName: string) => {
@@ -228,6 +229,39 @@ const NetworkTopology = () => {
     setInterfaceModal(prev => ({ ...prev, show: false }));
   }, [interfaceModal.nodeId, pendingConnection, setEdges, currentEdgeType, showLabels]);
 
+  const getNodeInterfaces = useCallback((nodeId: string | null) => {
+    if (!nodeId) return [];
+    const node = nodes.find(n => n.id === nodeId);
+    return node?.data?.config?.interfaces || [];
+  }, [nodes]);
+
+  const getConnectedInterfaces = useCallback((nodeId: string) => {
+    return edges
+      .filter(edge => edge.source === nodeId || edge.target === nodeId)
+      .map(edge => edge.source === nodeId ? edge.sourceHandle : edge.targetHandle)
+      .filter((handle): handle is string => handle !== undefined);
+  }, [edges]);
+
+  const handleDeleteNode = useCallback(() => {
+    if (interfaceModal.nodeId) {
+      const nodeToDelete = interfaceModal.nodeId;
+
+      // Delete all connected edges
+      const updatedEdges = edges.filter(
+        edge => edge.source !== nodeToDelete && edge.target !== nodeToDelete
+      );
+      setEdges(updatedEdges);
+
+      // Delete the node
+      setNodes(prevNodes => prevNodes.filter(node => node.id !== nodeToDelete));
+
+      // Close the modal
+      setInterfaceModal(prev => ({ ...prev, show: false }));
+
+      logger.debug('Deleted node', { nodeId: nodeToDelete });
+    }
+  }, [interfaceModal.nodeId, edges, setEdges, setNodes]);
+
   const handleToggleLabels = useCallback(() => {
     setShowLabels(prev => {
       const newShowLabels = !prev;
@@ -267,7 +301,7 @@ const NetworkTopology = () => {
             edges={edges}
             onNodesChange={handleNodesChange}
             onEdgesChange={onEdgesChange}
-            onInit={onInit}
+            onInit={setReactFlowInstance}
             onDrop={onDrop}
             onDragOver={onDragOver}
             onNodeContextMenu={onNodeContextMenu}
@@ -286,14 +320,15 @@ const NetworkTopology = () => {
           </ReactFlow>
 
           {/* Render interface select modal */}
-          {interfaceModal.show && (
-            <InterfaceSelectModal
-              interfaces={interfaceModal.interfaces}
-              position={interfaceModal.position}
-              onSelect={onInterfaceSelect}
-              onClose={() => setInterfaceModal(prev => ({ ...prev, show: false }))}
-            />
-          )}
+          <InterfaceSelectModal
+            show={interfaceModal.show}
+            interfaces={getNodeInterfaces(interfaceModal.nodeId)}
+            connectedInterfaces={interfaceModal.nodeId ? getConnectedInterfaces(interfaceModal.nodeId) : []}
+            position={interfaceModal.position}
+            onSelect={onInterfaceSelect}
+            onClose={() => setInterfaceModal(prev => ({ ...prev, show: false }))}
+            onDelete={handleDeleteNode}
+          />
         </div>
         <Sidebar />
       </ReactFlowProvider>
