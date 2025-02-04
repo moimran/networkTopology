@@ -18,25 +18,25 @@ const getHandleStyle = (position: Position, index: number, total: number) => {
     case Position.Top:
       return {
         ...baseStyle,
-        top: '-4px',
+        top: '-8px',
         left: `${percentage}%`,
       };
     case Position.Right:
       return {
         ...baseStyle,
-        right: '-4px',
+        right: '-8px',
         top: `${percentage}%`,
       };
     case Position.Bottom:
       return {
         ...baseStyle,
-        bottom: '-4px',
+        bottom: '-8px',
         left: `${percentage}%`,
       };
     case Position.Left:
       return {
         ...baseStyle,
-        left: '-4px',
+        left: '-8px',
         top: `${percentage}%`,
       };
     default:
@@ -44,16 +44,13 @@ const getHandleStyle = (position: Position, index: number, total: number) => {
   }
 };
 
-/**
- * NetworkNode Component
- * 
- * A node component for the network topology graph that displays device information
- * and handles based on the device configuration.
- */
 const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
-  // Initialize handles
   const handles = data.handles || {};
-  const handleCount = Object.keys(handles).length;
+
+  // Get the selected handle ID based on the selected interface name
+  const selectedHandleId = Object.entries(handles).find(
+    ([_, handle]) => handle.interface.interfaceName === data.selectedInterface
+  )?.[0];
 
   // Group handles by position
   const handlesByPosition = Object.entries(handles).reduce((acc, [handleId, handle]) => {
@@ -65,16 +62,11 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
     return acc;
   }, {} as Record<Position, Array<{ id: string; position: Position; interface: any }>>);
 
-  // Get the selected handle ID based on the selected interface name
-  const selectedHandleId = Object.entries(handles).find(
-    ([_, handle]) => handle.interface.interfaceName === data.selectedInterface
-  )?.[0];
-
   useEffect(() => {
     logger.debug('Device node handles', {
       id,
       deviceName: data.config.deviceName,
-      handleCount,
+      selectedInterface: data.selectedInterface,
       handles: Object.keys(handles).map(key => ({
         id: key,
         position: handles[key].position,
@@ -84,8 +76,8 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
   }, [id, handles, data]);
 
   return (
-    <div className="device-node">
-      {/* Render handles grouped by position */}
+    <>
+      {/* Handles */}
       {Object.entries(handlesByPosition).map(([position, positionHandles]) => (
         positionHandles.map((handle, index) => {
           const style = getHandleStyle(handle.position as Position, index, positionHandles.length);
@@ -99,7 +91,7 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
               position={handle.position}
               style={{
                 ...style,
-                opacity: isSelected ? 1 : 0, // Show only selected handle
+                opacity: isSelected ? 1 : 0,
               }}
               className="device-handle"
               isConnectable={true}
@@ -111,27 +103,15 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
         })
       ))}
       
-      {/* Node label */}
-      <div className="label">{data.label || data.config.deviceName}</div>
-      
-      {/* Device info */}
-      <div className="device-info">
-        <div className="device-type">{data.config.deviceType}</div>
-        <div className="interface-count">
-          Interfaces: {data.config.interfaces.length}
-        </div>
-        <div className="interface-list">
-          {data.config.interfaces.map((iface) => (
-            <div key={iface.interfaceName} className="interface-item">
-              <span className="interface-name">{iface.interfaceName}</span>
-              <span className="interface-type">({iface.interfaceType})</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+      {/* Icon and Label */}
+      <img 
+        src="/icons/router-2d-gen-dark-s.svg"
+        alt={data.config.deviceName}
+        className="device-icon"
+      />
+      <div className="node-label">{data.label || data.config.deviceName}</div>
+    </>
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
 export default memo(NetworkNode);

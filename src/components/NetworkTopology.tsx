@@ -54,7 +54,7 @@ const NetworkTopology = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   
   // Custom hooks for managing nodes and edges
-  const { edges, onEdgesChange, onConnect, setEdges } = useNetworkEdges();
+  const { edges, onEdgesChange, setEdges } = useNetworkEdges();
   const { createDeviceNode, isLoading, error } = useDeviceNodes(DEVICE_CONFIG_PATH);
 
   // Context menu state
@@ -70,9 +70,12 @@ const NetworkTopology = () => {
     interfaces: [],
   });
 
-  // Add connection state
-  const [connectionStartNode, setConnectionStartNode] = useState<string | null>(null);
-  const [connectionStartHandle, setConnectionStartHandle] = useState<string | null>(null);
+  // Connection state
+  const [pendingConnection, setPendingConnection] = useState<{
+    sourceNodeId: string;
+    sourceHandleId: string;
+    sourceInterface: string;
+  } | null>(null);
 
   /**
    * Handle node changes (position, selection, etc.)
@@ -129,7 +132,8 @@ const NetworkTopology = () => {
     logger.debug('Node context menu', { 
       nodeId: node.id, 
       position: { x: event.clientX, y: event.clientY },
-      data: node.data 
+      data: node.data,
+      pendingConnection
     });
 
     setContextMenu({
@@ -141,48 +145,70 @@ const NetworkTopology = () => {
       nodeId: node.id,
       interfaces: node.data.config.interfaces,
     });
-  }, []);
+  }, [pendingConnection]);
 
   // Handle interface selection from context menu
   const onInterfaceSelect = useCallback((interfaceName: string) => {
-    logger.debug('Interface selected', { nodeId: contextMenu.nodeId, interfaceName });
-    // Show the corresponding handle
-    const nodes = reactFlowInstance?.getNodes() || [];
-    const updatedNodes = nodes.map(node => {
-      if (node.id === contextMenu.nodeId) {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            selectedInterface: interfaceName,
-          },
-        };
-      }
-      return node;
-    });
-    setNodes(updatedNodes);
+    const selectedNode = contextMenu.nodeId;
+    if (!selectedNode) return;
+
+    if (!pendingConnection) {
+      // This is the source node selection
+      logger.debug('Source interface selected', { nodeId: selectedNode, interfaceName });
+      
+      // Store the source connection info
+      setPendingConnection({
+        sourceNodeId: selectedNode,
+        sourceHandleId: interfaceName,
+        sourceInterface: interfaceName,
+      });
+
+      // Show the selected handle on the source node
+      setNodes(nodes => nodes.map(node => {
+        if (node.id === selectedNode) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              selectedInterface: interfaceName,
+            },
+          };
+        }
+        return node;
+      }));
+    } else {
+      // This is the target node selection
+      logger.debug('Target interface selected', {
+        source: pendingConnection,
+        target: { nodeId: selectedNode, interfaceName }
+      });
+
+      // Create the connection
+      const newEdge: Connection = {
+        id: `${pendingConnection.sourceNodeId}-${pendingConnection.sourceInterface}-${selectedNode}-${interfaceName}`,
+        source: pendingConnection.sourceNodeId,
+        sourceHandle: pendingConnection.sourceInterface,
+        target: selectedNode,
+        targetHandle: interfaceName,
+        type: 'default',
+      };
+
+      setEdges(edges => [...edges, newEdge]);
+
+      // Clear the pending connection and selected handles
+      setPendingConnection(null);
+      setNodes(nodes => nodes.map(node => ({
+        ...node,
+        data: {
+          ...node.data,
+          selectedInterface: null,
+        },
+      })));
+    }
+
+    // Hide the context menu
     setContextMenu(prev => ({ ...prev, show: false }));
-  }, [contextMenu.nodeId, reactFlowInstance, setNodes]);
-
-  // Handle connection start
-  const onConnectStart = useCallback((event: React.MouseEvent | React.TouchEvent, { nodeId, handleId }: OnConnectStartParams) => {
-    setConnectionStartNode(nodeId || null);
-    setConnectionStartHandle(handleId || null);
-    logger.debug('Connection start', { nodeId, handleId });
-  }, []);
-
-  // Handle connection end
-  const onConnectEnd = useCallback((event: MouseEvent | TouchEvent) => {
-    setConnectionStartNode(null);
-    setConnectionStartHandle(null);
-    logger.debug('Connection end');
-  }, []);
-
-  // Handle connection complete
-  const onConnectComplete = useCallback((params: Connection) => {
-    logger.debug('Connection complete', params);
-    setEdges((eds) => [...eds, { ...params, type: 'default' }]);
-  }, [setEdges]);
+  }, [contextMenu.nodeId, pendingConnection, setEdges]);
 
   if (isLoading) {
     return <div>Loading device configuration...</div>;
@@ -202,12 +228,9 @@ const NetworkTopology = () => {
             edges={edges}
             onNodesChange={handleNodesChange}
             onEdgesChange={onEdgesChange}
-            onConnect={onConnectComplete}
             onInit={onInit}
             onDrop={onDrop}
             onDragOver={onDragOver}
-            onConnectStart={onConnectStart}
-            onConnectEnd={onConnectEnd}
             onNodeContextMenu={onNodeContextMenu}
             nodeTypes={nodeTypes}
             nodeOrigin={nodeOrigin}
