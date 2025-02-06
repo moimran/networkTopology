@@ -1,8 +1,8 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useCallback, useMemo } from 'react';
 import { Handle, NodeProps, Position } from '@xyflow/react';
 import { DeviceNodeData } from '../../types/device';
 import { logger } from '../../utils/logger';
-import '../../styles/components/networkNode.css';
+import './NetworkNode.css';
 
 // Calculate handle style based on position and index
 const getHandleStyle = (position: Position, index: number, total: number) => {
@@ -76,7 +76,9 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
   }, [id, handles, data]);
 
   return (
-    <>
+    <div 
+      className="network-node"
+    >
       {/* Handles */}
       {Object.entries(handlesByPosition).map(([position, positionHandles]) => (
         positionHandles.map((handle, index) => {
@@ -110,7 +112,7 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
         className="device-icon"
       />
       <div className="node-label">{data.label || data.config.deviceName}</div>
-    </>
+    </div>
   );
 };
 

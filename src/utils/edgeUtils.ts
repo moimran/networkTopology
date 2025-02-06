@@ -3,56 +3,39 @@ import { Position, XYPosition, InternalNode } from '@xyflow/react';
 /**
  * Calculate the intersection point between two nodes
  */
-function getNodeIntersection(intersectionNode: InternalNode, targetNode: InternalNode): XYPosition {
-  const { internals: intersectionInternals } = intersectionNode;
-  const { width: intersectionNodeWidth, height: intersectionNodeHeight } = intersectionNode.measured ?? {
-    width: 0,
-    height: 0,
-  };
-  const targetPosition = targetNode.internals.positionAbsolute;
+function getNodeIntersection(node: InternalNode, target: InternalNode): XYPosition {
+  const { width = 0, height = 0 } = node.measured ?? {};
+  const centerX = node.internals.positionAbsolute.x + width / 2;
+  const centerY = node.internals.positionAbsolute.y + height / 2;
+  const targetCenterX = target.internals.positionAbsolute.x + (target.measured?.width ?? 0) / 2;
+  const targetCenterY = target.internals.positionAbsolute.y + (target.measured?.height ?? 0) / 2;
 
-  const w = (intersectionNodeWidth ?? 0) / 2;
-  const h = (intersectionNodeHeight ?? 0) / 2;
+  // Calculate angle between centers
+  const dx = targetCenterX - centerX;
+  const dy = targetCenterY - centerY;
+  const angle = Math.atan2(dy, dx);
 
-  const x2 = intersectionInternals.positionAbsolute.x + w;
-  const y2 = intersectionInternals.positionAbsolute.y + h;
-  const x1 = targetPosition.x + w;
-  const y1 = targetPosition.y + h;
+  // Calculate intersection with node boundary
+  const intersectionX = centerX + Math.cos(angle) * width / 2;
+  const intersectionY = centerY + Math.sin(angle) * height / 2;
 
-  const xx1 = (x1 - x2) / (2 * w) - (y1 - y2) / (2 * h);
-  const yy1 = (x1 - x2) / (2 * w) + (y1 - y2) / (2 * h);
-  const a = 1 / (Math.abs(xx1) + Math.abs(yy1));
-  const xx3 = a * xx1;
-  const yy3 = a * yy1;
-  const x = w * (xx3 + yy3) + x2;
-  const y = h * (-xx3 + yy3) + y2;
-
-  return { x, y };
+  return { x: intersectionX, y: intersectionY };
 }
 
 /**
  * Determine the edge position based on intersection point
  */
-function getEdgePosition(node: InternalNode, intersectionPoint: XYPosition) {
-  const n = { ...node.position, ...node };
-  const nx = Math.round(n.x);
-  const ny = Math.round(n.y);
-  const px = Math.round(intersectionPoint.x);
-  const py = Math.round(intersectionPoint.y);
+function getEdgePosition(node: InternalNode, intersectionPoint: XYPosition): Position {
+  const centerX = node.internals.positionAbsolute.x + (node.measured?.width ?? 0) / 2;
+  const centerY = node.internals.positionAbsolute.y + (node.measured?.height ?? 0) / 2;
+  
+  const dx = intersectionPoint.x - centerX;
+  const dy = intersectionPoint.y - centerY;
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
-  if (px <= nx + 1) {
-    return Position.Left;
-  }
-  if (px >= nx + (n.measured?.width ?? 0) - 1) {
-    return Position.Right;
-  }
-  if (py <= ny + 1) {
-    return Position.Top;
-  }
-  if (py >= n.y + (n.measured?.height ?? 0) - 1) {
-    return Position.Bottom;
-  }
-
+  if (angle >= -45 && angle < 45) return Position.Right;
+  if (angle >= 45 && angle < 135) return Position.Bottom;
+  if (angle >= 135 || angle < -135) return Position.Left;
   return Position.Top;
 }
 
@@ -60,17 +43,17 @@ function getEdgePosition(node: InternalNode, intersectionPoint: XYPosition) {
  * Get edge parameters for drawing the floating edge
  */
 export function getEdgeParams(source: InternalNode, target: InternalNode) {
-  const sourceIntersectionPoint = getNodeIntersection(source, target);
-  const targetIntersectionPoint = getNodeIntersection(target, source);
+  const sourceIntersection = getNodeIntersection(source, target);
+  const targetIntersection = getNodeIntersection(target, source);
 
-  const sourcePos = getEdgePosition(source, sourceIntersectionPoint);
-  const targetPos = getEdgePosition(target, targetIntersectionPoint);
+  const sourcePos = getEdgePosition(source, sourceIntersection);
+  const targetPos = getEdgePosition(target, targetIntersection);
 
   return {
-    sx: sourceIntersectionPoint.x,
-    sy: sourceIntersectionPoint.y,
-    tx: targetIntersectionPoint.x,
-    ty: targetIntersectionPoint.y,
+    sx: sourceIntersection.x,
+    sy: sourceIntersection.y,
+    tx: targetIntersection.x,
+    ty: targetIntersection.y,
     sourcePos,
     targetPos,
   };
