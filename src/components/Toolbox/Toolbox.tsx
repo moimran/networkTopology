@@ -14,6 +14,10 @@ const edgeTypes = [
   { value: 'straight', label: 'Straight', icon: '→' },
   { value: 'step', label: 'Step', icon: '⌐' },
   { value: 'smoothstep', label: 'Smooth Step', icon: '⟿' },
+  { value: 'angle-right', label: 'Angle Right', icon: '⮤' },
+  { value: 'angle-left', label: 'Angle Left', icon: '⮥' },
+  { value: 'angle-top', label: 'Angle Top', icon: '⮧' },
+  { value: 'angle-bottom', label: 'Angle Bottom', icon: '⮦' },
 ];
 
 /**
