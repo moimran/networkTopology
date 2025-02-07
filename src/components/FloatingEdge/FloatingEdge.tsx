@@ -85,7 +85,9 @@ function FloatingEdge({ id, source, target, style, data }: EdgeProps<FloatingEdg
         targetX: tx,
         targetY: ty,
         borderRadius: 8,
-        offset: 25
+        offset: 1,
+        centerX: 285,
+        centerY: 385
       });
       break;
     default:

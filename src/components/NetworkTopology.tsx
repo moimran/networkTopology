@@ -22,6 +22,7 @@ import NetworkNode from './NetworkNode/NetworkNode';
 import Sidebar from './Sidebar';
 import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
 import FloatingEdge from './FloatingEdge/FloatingEdge';
+import Toolbox from './Toolbox/Toolbox';
 import Toolbar from './Toolbar/Toolbar';
 import './FloatingEdge/FloatingEdge.css';
 import '../styles/components/networkTopology.css';
@@ -291,6 +292,9 @@ const NetworkTopology = () => {
     <div className="network-topology">
       <ReactFlowProvider>
         <div className="network-flow-wrapper" ref={reactFlowWrapper}>
+          <div className="absolute inset-0 flex items-center">
+            <Toolbox />
+          </div>
           <Toolbar 
             onEdgeTypeChange={setCurrentEdgeType} 
             showLabels={showLabels}
