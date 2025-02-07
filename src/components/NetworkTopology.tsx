@@ -65,6 +65,7 @@ const NetworkTopology = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [currentEdgeType, setCurrentEdgeType] = useState('straight');
   const [showLabels, setShowLabels] = useState(false);
+  const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
   
   // Custom hooks for managing nodes and edges
   const { edges, onEdgesChange, setEdges } = useNetworkEdges();
@@ -279,6 +280,79 @@ const NetworkTopology = () => {
     });
   }, [edges, setEdges]);
 
+  /**
+   * Handle edge selection
+   */
+  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Connection) => {
+    event.stopPropagation();
+    setSelectedEdges(prev => {
+      const isSelected = prev.includes(edge.id);
+      if (isSelected) {
+        return [];
+      } else if (event.shiftKey) {
+        return [...prev, edge.id];
+      } else {
+        return [edge.id];
+      }
+    });
+  }, []);
+
+  /**
+   * Clear edge selection when clicking anywhere except toolbox
+   */
+  const onPaneClick = useCallback((event: React.MouseEvent) => {
+    // Check if the click target is within the toolbox
+    const isToolboxClick = (event.target as Element)?.closest('.toolbox-container');
+    if (!isToolboxClick) {
+      setSelectedEdges([]);
+    }
+  }, []);
+
+  /**
+   * Clear edge selection when clicking on nodes or dragging
+   */
+  const onNodeClick = useCallback(() => {
+    setSelectedEdges([]);
+  }, []);
+
+  const onNodeDragStart = useCallback(() => {
+    setSelectedEdges([]);
+  }, []);
+
+  /**
+   * Handle edge type change for selected edges or set default type
+   */
+  const handleEdgeTypeChange = useCallback((newType: string) => {
+    setCurrentEdgeType(newType);
+    
+    if (selectedEdges.length > 0) {
+      // Update only selected edges
+      setEdges(eds => 
+        eds.map(edge => {
+          if (selectedEdges.includes(edge.id)) {
+            return {
+              ...edge,
+              data: {
+                ...edge.data,
+                edgeType: newType,
+              },
+            };
+          }
+          return edge;
+        })
+      );
+    } else {
+      // Set as default edge type for new edges
+      setEdges(edges => edges.map(edge => ({
+        ...edge,
+        data: {
+          ...edge.data,
+          edgeType: newType,
+        },
+      })));
+    }
+  }, [selectedEdges, setEdges]);
+
   if (isLoading) {
     return <div>Loading device configuration...</div>;
   }
@@ -293,10 +367,12 @@ const NetworkTopology = () => {
       <ReactFlowProvider>
         <div className="network-flow-wrapper" ref={reactFlowWrapper}>
           <div className="absolute inset-0 flex items-center">
-            <Toolbox />
+            <Toolbox 
+              onEdgeTypeChange={handleEdgeTypeChange}
+              selectedEdges={selectedEdges}
+            />
           </div>
           <Toolbar 
-            onEdgeTypeChange={setCurrentEdgeType} 
             showLabels={showLabels}
             onToggleLabels={handleToggleLabels}
           />
@@ -309,6 +385,10 @@ const NetworkTopology = () => {
             onDrop={onDrop}
             onDragOver={onDragOver}
             onNodeContextMenu={onNodeContextMenu}
+            onEdgeClick={onEdgeClick}
+            onPaneClick={onPaneClick}
+            onNodeClick={onNodeClick}
+            onNodeDragStart={onNodeDragStart}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             nodeOrigin={nodeOrigin}
@@ -316,7 +396,8 @@ const NetworkTopology = () => {
             fitView
             defaultEdgeOptions={{
               type: 'floating',
-              animated: false
+              animated: false,
+              className: 'selectable-edge'
             }}
           >
             <Background variant={BackgroundVariant.Dots} />

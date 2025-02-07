@@ -9,7 +9,7 @@ export type FloatingEdgeData = {
   showLabels?: boolean;
 };
 
-function FloatingEdge({ id, source, target, style, data }: EdgeProps<FloatingEdgeData>) {
+function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<FloatingEdgeData>) {
   const { sourceNode, targetNode } = useStore((s) => {
     const sourceNode = s.nodeLookup.get(source);
     const targetNode = s.nodeLookup.get(target);
@@ -23,42 +23,13 @@ function FloatingEdge({ id, source, target, style, data }: EdgeProps<FloatingEdg
 
   const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(sourceNode, targetNode);
 
-  // Debug output for edge parameters
-  console.log('Edge parameters:', {
-    id,
-    source: {
-      x: sx,
-      y: sy,
-      pos: sourcePos,
-      nodeCenter: {
-        x: sourceNode.position.x + (sourceNode.measured?.width ?? 0) / 2,
-        y: sourceNode.position.y + (sourceNode.measured?.height ?? 0) / 2
-      }
-    },
-    target: {
-      x: tx,
-      y: ty,
-      pos: targetPos,
-      nodeCenter: {
-        x: targetNode.position.x + (targetNode.measured?.width ?? 0) / 2,
-        y: targetNode.position.y + (targetNode.measured?.height ?? 0) / 2
-      }
-    }
-  });
+  // Get the appropriate path based on edge type
+  let edgePath = '';
+  const pathParams = [sx, sy, tx, ty] as const;
 
-  // Calculate angle between nodes
-  const dx = tx - sx;
-  const dy = ty - sy;
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-  
-  console.log('Edge angle:', { angle, dx, dy });
-
-  let path = '';
-  
-  // Handle different edge types based on data.edgeType
   switch (data?.edgeType) {
     case 'straight':
-      [path] = getStraightPath({
+      [edgePath] = getStraightPath({
         sourceX: sx,
         sourceY: sy,
         targetX: tx,
@@ -66,90 +37,67 @@ function FloatingEdge({ id, source, target, style, data }: EdgeProps<FloatingEdg
       });
       break;
     case 'step':
-      [path] = getSmoothStepPath({
+      [edgePath] = getSmoothStepPath({
         sourceX: sx,
         sourceY: sy,
-        sourcePosition: sourcePos,
-        targetPosition: targetPos,
         targetX: tx,
         targetY: ty,
-        borderRadius: 0,
+        borderRadius: 10,
       });
       break;
     case 'smoothstep':
-      [path] = getSmoothStepPath({
+      [edgePath] = getSmoothStepPath({
         sourceX: sx,
         sourceY: sy,
-        sourcePosition: sourcePos,
-        targetPosition: targetPos,
         targetX: tx,
         targetY: ty,
-        borderRadius: 8,
-        offset: 1,
-        centerX: 285,
-        centerY: 385
+        borderRadius: 16,
       });
       break;
     default:
-      // Use angle-based logic for default edge type
-      if ((angle > 60 && angle < 120) || (angle < -60 && angle > -120)) {
-        console.log('Using straight path due to angle', { angle });
-        [path] = getStraightPath({
-          sourceX: sx,
-          sourceY: sy,
-          targetX: tx,
-          targetY: ty,
-        });
-      } else {
-        console.log('Using bezier path', { angle });
-        [path] = getBezierPath({
-          sourceX: sx,
-          sourceY: sy,
-          sourcePosition: sourcePos,
-          targetPosition: targetPos,
-          targetX: tx,
-          targetY: ty,
-          curvature: 0.1
-        });
-      }
+      [edgePath] = getBezierPath({
+        sourceX: sx,
+        sourceY: sy,
+        targetX: tx,
+        targetY: ty,
+      });
   }
-
-  // Calculate the middle point for label positioning
-  const labelX = (sx + tx) / 2;
-  const labelY = (sy + ty) / 2;
 
   return (
     <>
-      <g className="react-flow__connection">
-        <path 
-          id={id} 
-          className="react-flow__edge-path" 
-          d={path} 
-          style={{
-            ...style,
-            strokeWidth: 2,
-            stroke: '#4a90e2',
-          } as CSSProperties} 
-        />
-      </g>
-      {data?.showLabels && data?.sourceInterface && data?.targetInterface && (
-        <foreignObject
-          width={200}
-          height={40}
-          x={labelX - 100}
-          y={labelY - 20}
-          className="edge-label-container"
-          requiredExtensions="http://www.w3.org/1999/xhtml"
-        >
-          <div className="edge-label">
-            <span className="interface-label source">
+      <path
+        className={`floating-edge-path ${selected ? 'selected' : ''}`}
+        d={edgePath}
+        fill="none"
+        strokeWidth={2}
+        stroke="currentColor"
+        style={style}
+      />
+      {data?.showLabels && (
+        <>
+          {data.sourceInterface && (
+            <text
+              x={sx}
+              y={sy - 10}
+              textAnchor="middle"
+              alignmentBaseline="middle"
+              className="edge-label"
+            >
               {data.sourceInterface}
-            </span>
-            <span className="interface-label target">
+            </text>
+          )}
+          {data.targetInterface && (
+            <text
+              x={tx}
+              y={ty - 10}
+              textAnchor="middle"
+              alignmentBaseline="middle"
+              className="edge-label"
+            >
               {data.targetInterface}
-            </span>
-          </div>
-        </foreignObject>
+            </text>
+          )}
+        </>
       )}
     </>
   );

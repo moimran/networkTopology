@@ -15,8 +15,8 @@
 /* Toolbox container */
 .toolbox-container {
   position: absolute;
-  left: 0;
-  top: 50%;
+  left: 0%;
+  top: 10%;
   transform: translateY(-50%);
   z-index: 50;
   cursor: pointer;
@@ -24,7 +24,7 @@
 
 /* Toolbox panel */
 .toolbox-panel {
-  background: rgba(31, 41, 55, 0.95);
+  background: rgba(43, 82, 138, 0.95);
   backdrop-filter: blur(8px);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
@@ -93,6 +93,71 @@
   font-size: 0.95rem;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* Adding new styles for edge type section */
+.toolbox-section {
+  margin-bottom: 1.5rem;
+}
+
+.toolbox-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.toolbox-section-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.75rem;
+}
+
+.edge-selection-info {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: normal;
+}
+
+.edge-type-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.edge-type-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.edge-type-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.edge-type-button.selected {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.edge-type-icon {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.edge-type-label {
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 /* Footer styles */
