@@ -312,7 +312,7 @@ const NetworkTopology = () => {
             fitView
             defaultEdgeOptions={{
               type: 'floating',
-              animated: true
+              animated: false
             }}
           >
             <Background variant={BackgroundVariant.Dots} />
