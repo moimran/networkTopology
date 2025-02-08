@@ -34,7 +34,6 @@ interface ToolboxSection {
  * Uses framer-motion for smooth animations and hover interactions.
  */
 export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProps) {
-  const [selectedEdgeType, setSelectedEdgeType] = useState('straight');
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const { getEdges } = useReactFlow();
@@ -46,22 +45,29 @@ export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProp
     }
   }, [isHovered]);
 
-  const handleEdgeTypeChange = (newType: string) => {
-    setSelectedEdgeType(newType);
-    onEdgeTypeChange(newType);
+  const handleEdgeTypeChange = (type: string) => {
+    onEdgeTypeChange(type);
   };
 
   const toggleSection = (sectionId: string) => {
     setExpandedSection(prev => prev === sectionId ? null : sectionId);
   };
 
-  // Get the edge type of the first selected edge
-  const selectedEdgeTypeValue = (() => {
+  // Get the edge type of the selected edges
+  const getSelectedEdgeType = () => {
     if (selectedEdges.length === 0) return null;
+    
     const edges = getEdges();
-    const firstSelectedEdge = edges.find(edge => edge.id === selectedEdges[0]);
-    return firstSelectedEdge?.data?.edgeType || 'straight';
-  })();
+    const selectedEdgesData = edges.filter(edge => selectedEdges.includes(edge.id));
+    
+    // If all selected edges have the same type, return that type
+    const firstType = selectedEdgesData[0]?.data?.edgeType;
+    const allSameType = selectedEdgesData.every(edge => edge.data?.edgeType === firstType);
+    
+    return allSameType ? firstType : null;
+  };
+
+  const selectedEdgeType = getSelectedEdgeType();
 
   const sections: ToolboxSection[] = [
     {
@@ -73,7 +79,7 @@ export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProp
           {edgeTypes.map((type) => (
             <button
               key={type.value}
-              className={`edge-type-button ${selectedEdgeTypeValue === type.value ? 'selected' : ''}`}
+              className={`edge-type-button ${selectedEdgeType === type.value ? 'selected' : ''}`}
               onClick={() => handleEdgeTypeChange(type.value)}
               title={type.label}
             >

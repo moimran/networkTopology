@@ -322,35 +322,28 @@ const NetworkTopology = () => {
   /**
    * Handle edge type change for selected edges or set default type
    */
-  const handleEdgeTypeChange = useCallback((newType: string) => {
-    setCurrentEdgeType(newType);
-    
-    if (selectedEdges.length > 0) {
-      // Update only selected edges
-      setEdges(eds => 
-        eds.map(edge => {
+  const onEdgeTypeChange = useCallback((type: string) => {
+    setCurrentEdgeType(type);
+    setEdges((eds) => {
+      if (selectedEdges.length === 0) {
+        // If no edges are selected, update all edges
+        return eds.map((edge) => ({
+          ...edge,
+          data: { ...edge.data, edgeType: type },
+        }));
+      } else {
+        // If edges are selected, only update selected edges
+        return eds.map((edge) => {
           if (selectedEdges.includes(edge.id)) {
             return {
               ...edge,
-              data: {
-                ...edge.data,
-                edgeType: newType,
-              },
+              data: { ...edge.data, edgeType: type },
             };
           }
           return edge;
-        })
-      );
-    } else {
-      // Set as default edge type for new edges
-      setEdges(edges => edges.map(edge => ({
-        ...edge,
-        data: {
-          ...edge.data,
-          edgeType: newType,
-        },
-      })));
-    }
+        });
+      }
+    });
   }, [selectedEdges, setEdges]);
 
   if (isLoading) {
@@ -368,7 +361,7 @@ const NetworkTopology = () => {
         <div className="network-flow-wrapper" ref={reactFlowWrapper}>
           <div className="absolute inset-0 flex items-center">
             <Toolbox 
-              onEdgeTypeChange={handleEdgeTypeChange}
+              onEdgeTypeChange={onEdgeTypeChange}
               selectedEdges={selectedEdges}
             />
           </div>
