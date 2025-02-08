@@ -1,36 +1,22 @@
 import { Position, XYPosition, InternalNode } from '@xyflow/react';
 
 /**
- * Calculate the intersection point between two nodes
+ * Get the center coordinates of a node
  */
-function getNodeIntersection(node: InternalNode, target: InternalNode): XYPosition {
+function getNodeCenter(node: InternalNode): XYPosition {
   const { width = 0, height = 0 } = node.measured ?? {};
-  const centerX = node.internals.positionAbsolute.x + width / 2;
-  const centerY = node.internals.positionAbsolute.y + height / 2;
-  const targetCenterX = target.internals.positionAbsolute.x + (target.measured?.width ?? 0) / 2;
-  const targetCenterY = target.internals.positionAbsolute.y + (target.measured?.height ?? 0) / 2;
-
-  // Calculate angle between centers
-  const dx = targetCenterX - centerX;
-  const dy = targetCenterY - centerY;
-  const angle = Math.atan2(dy, dx);
-
-  // Calculate intersection with node boundary
-  const intersectionX = centerX + Math.cos(angle) * width / 2;
-  const intersectionY = centerY + Math.sin(angle) * height / 2;
-
-  return { x: intersectionX, y: intersectionY };
+  return {
+    x: node.internals.positionAbsolute.x + width / 2,
+    y: node.internals.positionAbsolute.y + height / 2
+  };
 }
 
 /**
- * Determine the edge position based on intersection point
+ * Determine edge position based on angle between centers
  */
-function getEdgePosition(node: InternalNode, intersectionPoint: XYPosition): Position {
-  const centerX = node.internals.positionAbsolute.x + (node.measured?.width ?? 0) / 2;
-  const centerY = node.internals.positionAbsolute.y + (node.measured?.height ?? 0) / 2;
-  
-  const dx = intersectionPoint.x - centerX;
-  const dy = intersectionPoint.y - centerY;
+function getEdgePosition(source: XYPosition, target: XYPosition): Position {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
   const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
   if (angle >= -45 && angle < 45) return Position.Right;
@@ -40,20 +26,22 @@ function getEdgePosition(node: InternalNode, intersectionPoint: XYPosition): Pos
 }
 
 /**
- * Get edge parameters for drawing the floating edge
+ * Get edge parameters for drawing the floating edge from node centers
  */
 export function getEdgeParams(source: InternalNode, target: InternalNode) {
-  const sourceIntersection = getNodeIntersection(source, target);
-  const targetIntersection = getNodeIntersection(target, source);
+  // Get center points of both nodes
+  const sourceCenter = getNodeCenter(source);
+  const targetCenter = getNodeCenter(target);
 
-  const sourcePos = getEdgePosition(source, sourceIntersection);
-  const targetPos = getEdgePosition(target, targetIntersection);
+  // Calculate positions based on the angle between centers
+  const sourcePos = getEdgePosition(sourceCenter, targetCenter);
+  const targetPos = getEdgePosition(targetCenter, sourceCenter);
 
   return {
-    sx: sourceIntersection.x,
-    sy: sourceIntersection.y,
-    tx: targetIntersection.x,
-    ty: targetIntersection.y,
+    sx: sourceCenter.x,
+    sy: sourceCenter.y,
+    tx: targetCenter.x,
+    ty: targetCenter.y,
     sourcePos,
     targetPos,
   };

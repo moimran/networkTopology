@@ -46,6 +46,16 @@ export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProp
   }, [isHovered]);
 
   const handleEdgeTypeChange = (type: string) => {
+    // Update local state immediately
+    const edges = getEdges();
+    const selectedEdgesData = edges.filter(edge => selectedEdges.includes(edge.id));
+    selectedEdgesData.forEach(edge => {
+      if (edge.data) {
+        edge.data.edgeType = type;
+      }
+    });
+    
+    // Call the parent handler
     onEdgeTypeChange(type);
   };
 
@@ -53,18 +63,18 @@ export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProp
     setExpandedSection(prev => prev === sectionId ? null : sectionId);
   };
 
-  // Get the edge type of the selected edges
+  // Get the edge type of the selected edges - Optimized to use local state
   const getSelectedEdgeType = () => {
     if (selectedEdges.length === 0) return null;
     
     const edges = getEdges();
     const selectedEdgesData = edges.filter(edge => selectedEdges.includes(edge.id));
     
+    if (selectedEdgesData.length === 0) return null;
+    
     // If all selected edges have the same type, return that type
     const firstType = selectedEdgesData[0]?.data?.edgeType;
-    const allSameType = selectedEdgesData.every(edge => edge.data?.edgeType === firstType);
-    
-    return allSameType ? firstType : null;
+    return selectedEdgesData.every(edge => edge.data?.edgeType === firstType) ? firstType : null;
   };
 
   const selectedEdgeType = getSelectedEdgeType();

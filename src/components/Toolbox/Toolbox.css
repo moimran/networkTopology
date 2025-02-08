@@ -131,8 +131,10 @@
   border-radius: 6px;
   color: #fff;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.1s ease-out;
   font-size: 0.9rem;
+  position: relative;
+  overflow: hidden;
 }
 
 .edge-type-button:hover {
@@ -141,6 +143,12 @@
 
 .edge-type-button.selected {
   background: rgba(59, 130, 246, 0.5);
+  transition: background-color 0s;
+}
+
+.edge-type-button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s;
 }
 
 .edge-type-icon {

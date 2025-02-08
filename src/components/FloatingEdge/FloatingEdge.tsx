@@ -1,6 +1,6 @@
-import { CSSProperties } from 'react';
 import { EdgeProps, useStore, getBezierPath, getStraightPath, getSmoothStepPath, Position } from '@xyflow/react';
 import { getEdgeParams } from '../../utils/edgeUtils';
+import { useRef, useCallback } from 'react';
 
 export type FloatingEdgeData = {
   edgeType?: 'default' | 'straight' | 'step' | 'smoothstep' | 'angle-right' | 'angle-left' | 'angle-top' | 'angle-bottom';
@@ -10,191 +10,211 @@ export type FloatingEdgeData = {
 };
 
 /**
- * Check if a 90-degree angle is possible based on node positions and handle positions
+ * Calculate parallel offset for edges between the same nodes
+ */
+function calculateParallelOffset(
+  sourceId: string,
+  targetId: string,
+  currentEdgeId: string,
+  edges: any[],
+  spacing: number = 4
+): { sourceOffset: { x: number; y: number }; targetOffset: { x: number; y: number } } {
+  // Find all edges between these nodes
+  const parallelEdges = edges.filter(
+    edge => (edge.source === sourceId && edge.target === targetId) ||
+            (edge.source === targetId && edge.target === sourceId)
+  );
+
+  if (parallelEdges.length <= 1) {
+    return { sourceOffset: { x: 0, y: 0 }, targetOffset: { x: 0, y: 0 } };
+  }
+
+  // Find the index of the current edge
+  const edgeIndex = parallelEdges.findIndex(edge => edge.id === currentEdgeId);
+  const totalEdges = parallelEdges.length;
+  
+  // Calculate offset based on edge position
+  const offset = (edgeIndex - (totalEdges - 1) / 2) * spacing;
+  
+  return {
+    sourceOffset: { x: offset, y: offset },
+    targetOffset: { x: offset, y: offset }
+  };
+}
+
+/**
+ * Calculate if a 90-degree angle is possible based on node positions
  */
 function canCreate90DegreeAngle(
   sourceX: number,
   sourceY: number,
   targetX: number,
   targetY: number,
-  sourcePos: Position,
-  targetPos: Position,
   direction: 'right' | 'left' | 'top' | 'bottom'
 ): boolean {
   const xDiff = Math.abs(targetX - sourceX);
   const yDiff = Math.abs(targetY - sourceY);
-  
+  const minDistance = 20; // Minimum distance required for a 90-degree angle
+
   switch (direction) {
     case 'right':
-      // Can create right angle if target is to the right and handles are compatible
-      return targetX > sourceX && 
-        (sourcePos === Position.Right || sourcePos === Position.Bottom || sourcePos === Position.Top) &&
-        (targetPos === Position.Left || targetPos === Position.Bottom || targetPos === Position.Top);
-    
+      return targetX > sourceX + minDistance;
     case 'left':
-      // Can create left angle if target is to the left and handles are compatible
-      return targetX < sourceX &&
-        (sourcePos === Position.Left || sourcePos === Position.Bottom || sourcePos === Position.Top) &&
-        (targetPos === Position.Right || targetPos === Position.Bottom || targetPos === Position.Top);
-    
+      return targetX < sourceX - minDistance;
     case 'top':
-      // Can create top angle if target is above and handles are compatible
-      return targetY < sourceY &&
-        (sourcePos === Position.Top || sourcePos === Position.Left || sourcePos === Position.Right) &&
-        (targetPos === Position.Bottom || targetPos === Position.Left || targetPos === Position.Right);
-    
+      return targetY < sourceY - minDistance;
     case 'bottom':
-      // Can create bottom angle if target is below and handles are compatible
-      return targetY > sourceY &&
-        (sourcePos === Position.Bottom || sourcePos === Position.Left || sourcePos === Position.Right) &&
-        (targetPos === Position.Top || targetPos === Position.Left || targetPos === Position.Right);
+      return targetY > sourceY + minDistance;
   }
 }
 
 /**
- * Calculate center point for angled edges
+ * Calculate the path for a 90-degree angle
  */
-function getAngleCenter(
+function calculate90DegreePath(
   sourceX: number,
   sourceY: number,
   targetX: number,
   targetY: number,
-  sourcePos: Position,
-  targetPos: Position,
-  direction: 'right' | 'left' | 'top' | 'bottom'
-): { centerX: number; centerY: number } {
-  switch (direction) {
-    case 'right':
-      return {
-        centerX: Math.max(sourceX, targetX),
-        centerY: sourceY,
-      };
-    case 'left':
-      return {
-        centerX: Math.min(sourceX, targetX),
-        centerY: sourceY,
-      };
-    case 'top':
-      return {
-        centerX: sourceX,
-        centerY: Math.min(sourceY, targetY),
-      };
-    case 'bottom':
-      return {
-        centerX: sourceX,
-        centerY: Math.max(sourceY, targetY),
-      };
+  direction: 'right' | 'left' | 'top' | 'bottom',
+  sourceOffset: { x: number; y: number },
+  targetOffset: { x: number; y: number }
+): string | null {
+  // Apply offsets to center points
+  const sx = sourceX + sourceOffset.x;
+  const sy = sourceY + sourceOffset.y;
+  const tx = targetX + targetOffset.x;
+  const ty = targetY + targetOffset.y;
+
+  // Check if we can create a 90-degree angle
+  if (!canCreate90DegreeAngle(sx, sy, tx, ty, direction)) {
+    return null;
   }
+
+  const path = [];
+  path.push(`M ${sx} ${sy}`);
+
+  // Calculate the 90-degree angle path
+  switch (direction) {
+    case 'right': {
+      // Move right from source, then up/down to target
+      path.push(`L ${tx} ${sy}`);
+      path.push(`L ${tx} ${ty}`);
+      break;
+    }
+    case 'left': {
+      // Move left from source, then up/down to target
+      path.push(`L ${tx} ${sy}`);
+      path.push(`L ${tx} ${ty}`);
+      break;
+    }
+    case 'top': {
+      // Move up from source, then left/right to target
+      path.push(`L ${sx} ${ty}`);
+      path.push(`L ${tx} ${ty}`);
+      break;
+    }
+    case 'bottom': {
+      // Move down from source, then left/right to target
+      path.push(`L ${sx} ${ty}`);
+      path.push(`L ${tx} ${ty}`);
+      break;
+    }
+  }
+
+  return path.join(' ');
 }
 
 function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<FloatingEdgeData>) {
-  const { sourceNode, targetNode } = useStore((s) => {
-    const sourceNode = s.nodeLookup.get(source);
-    const targetNode = s.nodeLookup.get(target);
-    return { sourceNode, targetNode };
-  });
+  const { sourceNode, targetNode, edges } = useStore((s) => ({
+    sourceNode: s.nodeLookup.get(source),
+    targetNode: s.nodeLookup.get(target),
+    edges: s.edges
+  }));
 
   if (!sourceNode || !targetNode) {
     console.log('Missing nodes for edge', { id, source, target });
     return null;
   }
 
-  const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(sourceNode, targetNode);
+  const { sx, sy, tx, ty } = getEdgeParams(sourceNode, targetNode);
+  
+  // Calculate offset if there are multiple edges between these nodes
+  const { sourceOffset, targetOffset } = calculateParallelOffset(source, target, id, edges);
+
+  const warningShownRef = useRef<{ [key: string]: boolean }>({});
+  const showWarningOnce = useCallback((direction: string) => {
+    const warningKey = `${id}-${direction}`;
+    if (!warningShownRef.current[warningKey]) {
+      console.warn(
+        `Cannot create 90-degree ${direction} angle between nodes:`,
+        { source, target, direction }
+      );
+      warningShownRef.current[warningKey] = true;
+    }
+  }, [id, source, target]);
 
   // Get the appropriate path based on edge type
   let edgePath = '';
 
   switch (data?.edgeType) {
-    case 'straight':
+    case 'straight': {
       [edgePath] = getStraightPath({
-        sourceX: sx,
-        sourceY: sy,
-        targetX: tx,
-        targetY: ty,
-        sourcePosition: sourcePos,
-        targetPosition: targetPos,
+        sourceX: sx + sourceOffset.x,
+        sourceY: sy + sourceOffset.y,
+        targetX: tx + targetOffset.x,
+        targetY: ty + targetOffset.y,
       });
       break;
-    case 'step':
+    }
+    case 'step': {
       [edgePath] = getSmoothStepPath({
-        sourceX: sx,
-        sourceY: sy,
-        targetX: tx,
-        targetY: ty,
+        sourceX: sx + sourceOffset.x,
+        sourceY: sy + sourceOffset.y,
+        targetX: tx + targetOffset.x,
+        targetY: ty + targetOffset.y,
         borderRadius: 0,
-        sourcePosition: sourcePos,
-        targetPosition: targetPos,
       });
       break;
-    case 'smoothstep':
+    }
+    case 'smoothstep': {
       [edgePath] = getSmoothStepPath({
-        sourceX: sx,
-        sourceY: sy,
-        targetX: tx,
-        targetY: ty,
+        sourceX: sx + sourceOffset.x,
+        sourceY: sy + sourceOffset.y,
+        targetX: tx + targetOffset.x,
+        targetY: ty + targetOffset.y,
         borderRadius: 16,
-        sourcePosition: sourcePos,
-        targetPosition: targetPos,
       });
       break;
+    }
     case 'angle-right':
     case 'angle-left':
     case 'angle-top':
     case 'angle-bottom': {
       const direction = data.edgeType.split('-')[1] as 'right' | 'left' | 'top' | 'bottom';
+      const anglePath = calculate90DegreePath(sx, sy, tx, ty, direction, sourceOffset, targetOffset);
       
-      // Check if we can create a 90-degree angle
-      if (!canCreate90DegreeAngle(sx, sy, tx, ty, sourcePos, targetPos, direction)) {
-        // Fall back to smoothstep if we can't create a proper 90-degree angle
-        [edgePath] = getSmoothStepPath({
-          sourceX: sx,
-          sourceY: sy,
-          targetX: tx,
-          targetY: ty,
-          borderRadius: 16,
-          sourcePosition: sourcePos,
-          targetPosition: targetPos,
-        });
-        break;
+      if (anglePath) {
+        edgePath = anglePath;
+      } else {
+        showWarningOnce(direction);
+        edgePath = getStraightPath({
+          sourceX: sx + sourceOffset.x,
+          sourceY: sy + sourceOffset.y,
+          targetX: tx + targetOffset.x,
+          targetY: ty + targetOffset.y,
+        })[0];
       }
-
-      const { centerX, centerY } = getAngleCenter(sx, sy, tx, ty, sourcePos, targetPos, direction);
-      
-      // Create a custom path for the 90-degree angle
-      const path = [];
-      
-      // Move to start point
-      path.push(`M ${sx} ${sy}`);
-      
-      // Create the 90-degree angle based on direction
-      switch (direction) {
-        case 'right':
-        case 'left':
-          path.push(`L ${centerX} ${sy}`);
-          path.push(`L ${centerX} ${ty}`);
-          break;
-        case 'top':
-        case 'bottom':
-          path.push(`L ${sx} ${centerY}`);
-          path.push(`L ${tx} ${centerY}`);
-          break;
-      }
-      
-      // Line to end point
-      path.push(`L ${tx} ${ty}`);
-      
-      edgePath = path.join(' ');
       break;
     }
-    default:
+    default: {
       [edgePath] = getBezierPath({
-        sourceX: sx,
-        sourceY: sy,
-        targetX: tx,
-        targetY: ty,
-        sourcePosition: sourcePos,
-        targetPosition: targetPos,
+        sourceX: sx + sourceOffset.x,
+        sourceY: sy + sourceOffset.y,
+        targetX: tx + targetOffset.x,
+        targetY: ty + targetOffset.y,
       });
+    }
   }
 
   return (
@@ -211,8 +231,8 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
         <>
           {data.sourceInterface && (
             <text
-              x={sx}
-              y={sy - 10}
+              x={sx + sourceOffset.x}
+              y={sy + sourceOffset.y - 10}
               textAnchor="middle"
               alignmentBaseline="middle"
               className="edge-label"
@@ -222,8 +242,8 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
           )}
           {data.targetInterface && (
             <text
-              x={tx}
-              y={ty - 10}
+              x={tx + targetOffset.x}
+              y={ty + targetOffset.y - 10}
               textAnchor="middle"
               alignmentBaseline="middle"
               className="edge-label"
