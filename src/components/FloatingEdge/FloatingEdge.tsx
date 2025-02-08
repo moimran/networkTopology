@@ -231,23 +231,31 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
       targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
       break;
     }
-    case 'step':
-    case 'smoothstep': {
-      const borderRadius = data?.edgeType === 'step' ? 0 : 16;
-      [edgePath] = getSmoothStepPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
-        borderRadius,
-      });
-      // For step edges, position labels horizontally from nodes
-      sourceLabelX = sourceX + LABEL_DISTANCE;
-      sourceLabelY = sourceY;
-      targetLabelX = targetX - LABEL_DISTANCE;
-      targetLabelY = targetY;
-      break;
-    }
+    case "step":
+      case "smoothstep": {
+        const borderRadius = data?.edgeType === "step" ? 0 : 16;
+        [edgePath] = getSmoothStepPath({
+          sourceX,
+          sourceY,
+          targetX,
+          targetY,
+          borderRadius,
+        });
+        // For step edges, position labels horizontally from nodes
+        const middlePoint = (targetY - sourceY) / 2;
+        const isConjusted = middlePoint < LABEL_DISTANCE + 15;
+  
+        console.log({ isConjusted });
+        const delta = isConjusted ? middlePoint : LABEL_DISTANCE;
+  
+        const isOpposite = targetY - sourceY < 20;
+  
+        sourceLabelX = sourceX;
+        sourceLabelY = sourceY + (isOpposite ? 20 : delta);
+        targetLabelX = targetX;
+        targetLabelY = targetY - (isOpposite ? 20 : delta);
+        break;
+      }
     case 'angle-right':
     case 'angle-left':
     case 'angle-top':
