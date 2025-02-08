@@ -1,6 +1,6 @@
 import { EdgeProps, useStore, getBezierPath, getStraightPath, getSmoothStepPath, Position, EdgeLabelRenderer } from '@xyflow/react';
 import { getEdgeParams } from '../../utils/edgeUtils';
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, memo } from 'react';
 
 export type FloatingEdgeData = {
   edgeType?: 'default' | 'straight' | 'step' | 'smoothstep' | 'angle-right' | 'angle-left' | 'angle-top' | 'angle-bottom';
@@ -162,12 +162,26 @@ function calculate90DegreePath(
   return path.join(' ');
 }
 
-function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<FloatingEdgeData>) {
-  const { sourceNode, targetNode, edges } = useStore((s) => ({
-    sourceNode: s.nodeLookup.get(source),
-    targetNode: s.nodeLookup.get(target),
-    edges: s.edges
-  }));
+// Memoized edge component
+const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgeProps<FloatingEdgeData>) => {
+  // Selective store subscription with equality check
+  const { sourceNode, targetNode, edges } = useStore(
+    (s) => ({
+      sourceNode: s.nodeLookup.get(source),
+      targetNode: s.nodeLookup.get(target),
+      edges: s.edges
+    }),
+    (prev, next) => {
+      const sourceEqual = 
+        prev.sourceNode?.position.x === next.sourceNode?.position.x &&
+        prev.sourceNode?.position.y === next.sourceNode?.position.y;
+      const targetEqual = 
+        prev.targetNode?.position.x === next.targetNode?.position.x &&
+        prev.targetNode?.position.y === next.targetNode?.position.y;
+      const edgesEqual = prev.edges === next.edges;
+      return sourceEqual && targetEqual && edgesEqual;
+    }
+  );
 
   if (!sourceNode || !targetNode) {
     console.log('Missing nodes for edge', { id, source, target });
@@ -411,6 +425,9 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
       )}
     </>
   );
-}
+});
+
+// Add display name for debugging
+FloatingEdge.displayName = 'FloatingEdge';
 
 export default FloatingEdge;
