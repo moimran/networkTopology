@@ -243,33 +243,83 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
       
       if (anglePath) {
         edgePath = anglePath;
-        // Position labels based on the angle direction
+        
+        // Determine relative positions of nodes
+        const isSourceLeftOfTarget = sourceX < targetX;
+        const isSourceAboveTarget = sourceY < targetY;
+
+        // Position labels based on both direction and relative positions
         switch (direction) {
           case 'right':
-            sourceLabelX = sourceX + LABEL_DISTANCE;
-            sourceLabelY = sourceY;
-            targetLabelX = targetX - LABEL_DISTANCE;
-            targetLabelY = targetY;
+            if (isSourceLeftOfTarget) {
+              // Normal case: source -> right -> down/up -> target
+              sourceLabelX = sourceX + LABEL_DISTANCE;
+              sourceLabelY = sourceY;
+              targetLabelX = targetX;
+              targetLabelY = targetY + (isSourceAboveTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
+            } else {
+              // Reverse case: source <- right <- down/up <- target
+              sourceLabelX = sourceX - LABEL_DISTANCE;
+              sourceLabelY = sourceY;
+              targetLabelX = targetX;
+              targetLabelY = targetY + (isSourceAboveTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
+            }
             break;
           case 'left':
-            sourceLabelX = sourceX - LABEL_DISTANCE;
-            sourceLabelY = sourceY;
-            targetLabelX = targetX + LABEL_DISTANCE;
-            targetLabelY = targetY;
+            if (isSourceLeftOfTarget) {
+              // Reverse case: source -> left -> down/up -> target
+              sourceLabelX = sourceX + LABEL_DISTANCE;
+              sourceLabelY = sourceY;
+              targetLabelX = targetX;
+              targetLabelY = targetY + (isSourceAboveTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
+            } else {
+              // Normal case: source <- left <- down/up <- target
+              sourceLabelX = sourceX - LABEL_DISTANCE;
+              sourceLabelY = sourceY;
+              targetLabelX = targetX;
+              targetLabelY = targetY + (isSourceAboveTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
+            }
             break;
           case 'top':
-            sourceLabelX = sourceX;
-            sourceLabelY = sourceY - LABEL_DISTANCE;
-            targetLabelX = targetX;
-            targetLabelY = targetY + LABEL_DISTANCE;
+            if (isSourceAboveTarget) {
+              // Normal case: source -> up -> right/left -> target
+              sourceLabelX = sourceX;
+              sourceLabelY = sourceY - LABEL_DISTANCE;
+              targetLabelX = targetX + (isSourceLeftOfTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
+              targetLabelY = targetY;
+            } else {
+              // Reverse case: source <- up <- right/left <- target
+              sourceLabelX = sourceX;
+              sourceLabelY = sourceY + LABEL_DISTANCE;
+              targetLabelX = targetX + (isSourceLeftOfTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
+              targetLabelY = targetY;
+            }
             break;
           case 'bottom':
-            sourceLabelX = sourceX;
-            sourceLabelY = sourceY + LABEL_DISTANCE;
-            targetLabelX = targetX;
-            targetLabelY = targetY - LABEL_DISTANCE;
+            if (isSourceAboveTarget) {
+              // Normal case: source -> down -> right/left -> target
+              sourceLabelX = sourceX;
+              sourceLabelY = sourceY + LABEL_DISTANCE;
+              targetLabelX = targetX + (isSourceLeftOfTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
+              targetLabelY = targetY;
+            } else {
+              // Reverse case: source <- down <- right/left <- target
+              sourceLabelX = sourceX;
+              sourceLabelY = sourceY - LABEL_DISTANCE;
+              targetLabelX = targetX + (isSourceLeftOfTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
+              targetLabelY = targetY;
+            }
             break;
         }
+
+        // Add debug output
+        console.log('Angle edge label positions:', {
+          direction,
+          isSourceLeftOfTarget,
+          isSourceAboveTarget,
+          sourcePos: { x: sourceLabelX, y: sourceLabelY },
+          targetPos: { x: targetLabelX, y: targetLabelY }
+        });
       } else {
         showWarningOnce(direction);
         [edgePath] = getStraightPath({
