@@ -1,6 +1,6 @@
 import { EdgeProps, useStore, getBezierPath, getStraightPath, getSmoothStepPath, Position, EdgeLabelRenderer } from '@xyflow/react';
 import { getEdgeParams } from '../../utils/edgeUtils';
-import { useRef, useCallback, memo } from 'react';
+import { useRef, useCallback, memo, useLayoutEffect, useState } from 'react';
 
 export type FloatingEdgeData = {
   edgeType?: 'default' | 'straight' | 'step' | 'smoothstep' | 'angle-right' | 'angle-left' | 'angle-top' | 'angle-bottom';
@@ -164,7 +164,13 @@ function calculate90DegreePath(
 
 // Memoized edge component
 const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgeProps<FloatingEdgeData>) => {
-  // Selective store subscription with equality check
+  // Add state for label positions
+  const [labelPositions, setLabelPositions] = useState({
+    source: { x: 0, y: 0 },
+    target: { x: 0, y: 0 },
+    path: ''
+  });
+
   const { sourceNode, targetNode, edges } = useStore(
     (s) => ({
       sourceNode: s.nodeLookup.get(source),
@@ -183,16 +189,6 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
     }
   );
 
-  if (!sourceNode || !targetNode) {
-    console.log('Missing nodes for edge', { id, source, target });
-    return null;
-  }
-
-  const { sx, sy, tx, ty } = getEdgeParams(sourceNode, targetNode);
-  
-  // Calculate offset if there are multiple edges between these nodes
-  const { sourceOffset, targetOffset } = calculateParallelOffset(sourceNode, targetNode, id, edges);
-
   const warningShownRef = useRef<{ [key: string]: boolean }>({});
   const showWarningOnce = useCallback((direction: string) => {
     const warningKey = `${id}-${direction}`;
@@ -205,33 +201,41 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
     }
   }, [id, source, target]);
 
-  // Get the appropriate path based on edge type
-  let edgePath = '';
-  let [sourceX, sourceY] = [sx + sourceOffset.x, sy + sourceOffset.y];
-  let [targetX, targetY] = [tx + targetOffset.x, ty + targetOffset.y];
-
-  // Calculate label positions at a fixed distance from nodes
-  const LABEL_DISTANCE = 40; // pixels from node
-  let sourceLabelX = 0, sourceLabelY = 0;
-  let targetLabelX = 0, targetLabelY = 0;
-
-  switch (data?.edgeType) {
-    case 'straight': {
-      [edgePath] = getStraightPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
-      });
-      // Calculate angle between nodes
-      const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
-      sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
-      sourceLabelY = sourceY + Math.sin(angle) * LABEL_DISTANCE;
-      targetLabelX = targetX - Math.cos(angle) * LABEL_DISTANCE;
-      targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
-      break;
+  // Calculate positions synchronously before paint
+  useLayoutEffect(() => {
+    if (!sourceNode || !targetNode) {
+      return;
     }
-    case "step":
+
+    const { sx, sy, tx, ty } = getEdgeParams(sourceNode, targetNode);
+    const { sourceOffset, targetOffset } = calculateParallelOffset(sourceNode, targetNode, id, edges);
+
+    let edgePath = '';
+    let sourceLabelX = 0, sourceLabelY = 0;
+    let targetLabelX = 0, targetLabelY = 0;
+
+    const sourceX = sx + sourceOffset.x;
+    const sourceY = sy + sourceOffset.y;
+    const targetX = tx + targetOffset.x;
+    const targetY = ty + targetOffset.y;
+
+    // All the existing edge path and label position calculations
+    switch (data?.edgeType) {
+      case 'straight': {
+        [edgePath] = getStraightPath({
+          sourceX,
+          sourceY,
+          targetX,
+          targetY,
+        });
+        const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
+        sourceLabelX = sourceX + Math.cos(angle) * 40;
+        sourceLabelY = sourceY + Math.sin(angle) * 40;
+        targetLabelX = targetX - Math.cos(angle) * 40;
+        targetLabelY = targetY - Math.sin(angle) * 40;
+        break;
+      }
+      case "step":
       case "smoothstep": {
         const borderRadius = data?.edgeType === "step" ? 0 : 16;
         [edgePath] = getSmoothStepPath({
@@ -243,10 +247,9 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
         });
         // For step edges, position labels horizontally from nodes
         const middlePoint = (targetY - sourceY) / 2;
-        const isConjusted = middlePoint < LABEL_DISTANCE + 15;
-  
-        console.log({ isConjusted });
-        const delta = isConjusted ? middlePoint : LABEL_DISTANCE;
+        const isConjusted = middlePoint < 40 + 15;
+
+        const delta = isConjusted ? middlePoint : 40;
   
         const isOpposite = targetY - sourceY < 20;
   
@@ -256,181 +259,188 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
         targetLabelY = targetY - (isOpposite ? 20 : delta);
         break;
       }
-    case 'angle-right':
-    case 'angle-left':
-    case 'angle-top':
-    case 'angle-bottom': {
-      const direction = data.edgeType.split('-')[1] as 'right' | 'left' | 'top' | 'bottom';
-      const anglePath = calculate90DegreePath(sx, sy, tx, ty, direction, sourceOffset, targetOffset);
-      
-      if (anglePath) {
-        edgePath = anglePath;
+      case 'angle-right':
+      case 'angle-left':
+      case 'angle-top':
+      case 'angle-bottom': {
+        const direction = data.edgeType.split('-')[1] as 'right' | 'left' | 'top' | 'bottom';
+        const anglePath = calculate90DegreePath(sx, sy, tx, ty, direction, sourceOffset, targetOffset);
         
-        // Determine relative positions of nodes
-        const isSourceLeftOfTarget = sourceX < targetX;
-        const isSourceAboveTarget = sourceY < targetY;
+        if (anglePath) {
+          edgePath = anglePath;
+          
+          // Determine relative positions of nodes
+          const isSourceLeftOfTarget = sourceX < targetX;
+          const isSourceAboveTarget = sourceY < targetY;
 
-        // Position labels based on both direction and relative positions
-        switch (direction) {
-          case 'right':
-            if (isSourceLeftOfTarget) {
-              // Normal case: source -> right -> down/up -> target
-              sourceLabelX = sourceX + LABEL_DISTANCE;
-              sourceLabelY = sourceY;
-              targetLabelX = targetX;
-              targetLabelY = targetY + (isSourceAboveTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
-            } else {
-              // Reverse case: source <- right <- down/up <- target
-              sourceLabelX = sourceX - LABEL_DISTANCE;
-              sourceLabelY = sourceY;
-              targetLabelX = targetX;
-              targetLabelY = targetY + (isSourceAboveTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
-            }
-            break;
-          case 'left':
-            if (isSourceLeftOfTarget) {
-              // Reverse case: source -> left -> down/up -> target
-              sourceLabelX = sourceX + LABEL_DISTANCE;
-              sourceLabelY = sourceY;
-              targetLabelX = targetX;
-              targetLabelY = targetY + (isSourceAboveTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
-            } else {
-              // Normal case: source <- left <- down/up <- target
-              sourceLabelX = sourceX - LABEL_DISTANCE;
-              sourceLabelY = sourceY;
-              targetLabelX = targetX;
-              targetLabelY = targetY + (isSourceAboveTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
-            }
-            break;
-          case 'top':
-            if (isSourceAboveTarget) {
-              // Normal case: source -> up -> right/left -> target
-              sourceLabelX = sourceX;
-              sourceLabelY = sourceY - LABEL_DISTANCE;
-              targetLabelX = targetX + (isSourceLeftOfTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
-              targetLabelY = targetY;
-            } else {
-              // Reverse case: source <- up <- right/left <- target
-              sourceLabelX = sourceX;
-              sourceLabelY = sourceY + LABEL_DISTANCE;
-              targetLabelX = targetX + (isSourceLeftOfTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
-              targetLabelY = targetY;
-            }
-            break;
-          case 'bottom':
-            if (isSourceAboveTarget) {
-              // Normal case: source -> down -> right/left -> target
-              sourceLabelX = sourceX;
-              sourceLabelY = sourceY + LABEL_DISTANCE;
-              targetLabelX = targetX + (isSourceLeftOfTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
-              targetLabelY = targetY;
-            } else {
-              // Reverse case: source <- down <- right/left <- target
-              sourceLabelX = sourceX;
-              sourceLabelY = sourceY - LABEL_DISTANCE;
-              targetLabelX = targetX + (isSourceLeftOfTarget ? -LABEL_DISTANCE : LABEL_DISTANCE);
-              targetLabelY = targetY;
-            }
-            break;
+          // Position labels based on both direction and relative positions
+          switch (direction) {
+            case 'right':
+              if (isSourceLeftOfTarget) {
+                // Normal case: source -> right -> down/up -> target
+                sourceLabelX = sourceX + 40;
+                sourceLabelY = sourceY;
+                targetLabelX = targetX;
+                targetLabelY = targetY + (isSourceAboveTarget ? -40 : 40);
+              } else {
+                // Reverse case: source <- right <- down/up <- target
+                sourceLabelX = sourceX - 40;
+                sourceLabelY = sourceY;
+                targetLabelX = targetX;
+                targetLabelY = targetY + (isSourceAboveTarget ? -40 : 40);
+              }
+              break;
+            case 'left':
+              if (isSourceLeftOfTarget) {
+                // Reverse case: source -> left -> down/up -> target
+                sourceLabelX = sourceX + 40;
+                sourceLabelY = sourceY;
+                targetLabelX = targetX;
+                targetLabelY = targetY + (isSourceAboveTarget ? -40 : 40);
+              } else {
+                // Normal case: source <- left <- down/up <- target
+                sourceLabelX = sourceX - 40;
+                sourceLabelY = sourceY;
+                targetLabelX = targetX;
+                targetLabelY = targetY + (isSourceAboveTarget ? -40 : 40);
+              }
+              break;
+            case 'top':
+              if (isSourceAboveTarget) {
+                // Normal case: source -> up -> right/left -> target
+                sourceLabelX = sourceX;
+                sourceLabelY = sourceY - 40;
+                targetLabelX = targetX + (isSourceLeftOfTarget ? -40 : 40);
+                targetLabelY = targetY;
+              } else {
+                // Reverse case: source <- up <- right/left <- target
+                sourceLabelX = sourceX;
+                sourceLabelY = sourceY + 40;
+                targetLabelX = targetX + (isSourceLeftOfTarget ? -40 : 40);
+                targetLabelY = targetY;
+              }
+              break;
+            case 'bottom':
+              if (isSourceAboveTarget) {
+                // Normal case: source -> down -> right/left -> target
+                sourceLabelX = sourceX;
+                sourceLabelY = sourceY + 40;
+                targetLabelX = targetX + (isSourceLeftOfTarget ? -40 : 40);
+                targetLabelY = targetY;
+              } else {
+                // Reverse case: source <- down <- right/left <- target
+                sourceLabelX = sourceX;
+                sourceLabelY = sourceY - 40;
+                targetLabelX = targetX + (isSourceLeftOfTarget ? -40 : 40);
+                targetLabelY = targetY;
+              }
+              break;
+          }
+
+          // Add debug output
+          console.log('Angle edge label positions:', {
+            direction,
+            isSourceLeftOfTarget,
+            isSourceAboveTarget,
+            sourcePos: { x: sourceLabelX, y: sourceLabelY },
+            targetPos: { x: targetLabelX, y: targetLabelY }
+          });
+        } else {
+          showWarningOnce(direction);
+          [edgePath] = getStraightPath({
+            sourceX,
+            sourceY,
+            targetX,
+            targetY,
+          });
+          const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
+          sourceLabelX = sourceX + Math.cos(angle) * 40;
+          sourceLabelY = sourceY + Math.sin(angle) * 40;
+          targetLabelX = targetX - Math.cos(angle) * 40;
+          targetLabelY = targetY - Math.sin(angle) * 40;
         }
-
-        // Add debug output
-        console.log('Angle edge label positions:', {
-          direction,
-          isSourceLeftOfTarget,
-          isSourceAboveTarget,
-          sourcePos: { x: sourceLabelX, y: sourceLabelY },
-          targetPos: { x: targetLabelX, y: targetLabelY }
-        });
-      } else {
-        showWarningOnce(direction);
-        [edgePath] = getStraightPath({
+        break;
+      }
+      default: {
+        [edgePath] = getBezierPath({
           sourceX,
           sourceY,
           targetX,
           targetY,
         });
+        // For bezier curves, use the same approach as straight lines
         const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
-        sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
-        sourceLabelY = sourceY + Math.sin(angle) * LABEL_DISTANCE;
-        targetLabelX = targetX - Math.cos(angle) * LABEL_DISTANCE;
-        targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
+        sourceLabelX = sourceX + Math.cos(angle) * 40;
+        sourceLabelY = sourceY + Math.sin(angle) * 40;
+        targetLabelX = targetX - Math.cos(angle) * 40;
+        targetLabelY = targetY - Math.sin(angle) * 40;
       }
-      break;
     }
-    default: {
-      [edgePath] = getBezierPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
-      });
-      // For bezier curves, use the same approach as straight lines
-      const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
-      sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
-      sourceLabelY = sourceY + Math.sin(angle) * LABEL_DISTANCE;
-      targetLabelX = targetX - Math.cos(angle) * LABEL_DISTANCE;
-      targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
-    }
+
+    setLabelPositions({
+      source: { x: sourceLabelX, y: sourceLabelY },
+      target: { x: targetLabelX, y: targetLabelY },
+      path: edgePath
+    });
+  }, [sourceNode, targetNode, data?.edgeType, edges, id]);
+
+  if (!sourceNode || !targetNode) {
+    return null;
   }
 
-  const defaultStyle = {
-    strokeWidth: 1.5,
-    stroke: '#b1b1b7',
-    ...style
-  };
-
-  // Use interface labels if available, fall back to interface names
-  const sourceText = data?.sourceInterfaceLabel || data?.sourceInterface || 'E1/1';
-  const targetText = data?.targetInterfaceLabel || data?.targetInterface || 'E1/1';
-
-  const labelStyle = {
-    position: 'absolute',
-    background: '#e6f3ff',
-    padding: '1px 2px',
-    borderRadius: '4px',
-    fontSize: '8px',
-    fontWeight: 500,
-    color: '#333',
-    border: '1px solid #ccc',
-    boxShadow: '0 0 2px rgba(0,0,0,0.1)',
-    pointerEvents: 'all',
-    transform: 'translate(-50%, -50%)', // Center the label on the point
-    zIndex: 1000,
-  } as const;
-
+  // Use calculated positions from state
   return (
     <>
       <path
         id={id}
         className="react-flow__edge-path"
-        d={edgePath}
-        style={defaultStyle}
+        d={labelPositions.path}
+        style={style}
       />
-      {data?.showLabels && (
-        <EdgeLabelRenderer>
-          <div
-            style={{
-              ...labelStyle,
-              left: sourceLabelX,
-              top: sourceLabelY,
-            }}
-            className="nodrag nopan"
-          >
-            {sourceText}
-          </div>
-          <div
-            style={{
-              ...labelStyle,
-              left: targetLabelX,
-              top: targetLabelY,
-            }}
-            className="nodrag nopan"
-          >
-            {targetText}
-          </div>
-        </EdgeLabelRenderer>
-      )}
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            background: '#e6f3ff',
+            padding: '1px 2px',
+            borderRadius: '4px',
+            fontSize: '8px',
+            fontWeight: 500,
+            color: '#333',
+            border: '1px solid #ccc',
+            boxShadow: '0 0 2px rgba(0,0,0,0.1)',
+            pointerEvents: 'all',
+            transform: 'translate(-50%, -50%)', // Center the label on the point
+            zIndex: 1000,
+            left: labelPositions.source.x,
+            top: labelPositions.source.y,
+          }}
+          className="nodrag nopan"
+        >
+          {data?.sourceInterfaceLabel || data?.sourceInterface || 'E1/1'}
+        </div>
+        <div
+          style={{
+            position: 'absolute',
+            background: '#e6f3ff',
+            padding: '1px 2px',
+            borderRadius: '4px',
+            fontSize: '8px',
+            fontWeight: 500,
+            color: '#333',
+            border: '1px solid #ccc',
+            boxShadow: '0 0 2px rgba(0,0,0,0.1)',
+            pointerEvents: 'all',
+            transform: 'translate(-50%, -50%)', // Center the label on the point
+            zIndex: 1000,
+            left: labelPositions.target.x,
+            top: labelPositions.target.y,
+          }}
+          className="nodrag nopan"
+        >
+          {data?.targetInterfaceLabel || data?.targetInterface || 'E1/1'}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 });
