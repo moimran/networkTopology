@@ -10,35 +10,70 @@ export type FloatingEdgeData = {
 };
 
 /**
- * Calculate parallel offset for edges between the same nodes
+ * Calculate offset for parallel edges considering the angle between nodes
  */
-function calculateParallelOffset(
-  sourceId: string,
-  targetId: string,
-  currentEdgeId: string,
-  edges: any[],
-  spacing: number = 4
-): { sourceOffset: { x: number; y: number }; targetOffset: { x: number; y: number } } {
-  // Find all edges between these nodes
+function calculateParallelOffset(source: any, target: any, edgeId: string, edges: any[]): { sourceOffset: { x: number; y: number }, targetOffset: { x: number; y: number } } {
+  // Debug: Log input parameters
+  if (!source || !target) {
+    console.debug('Missing node data:', { source, target, edgeId });
+    return { sourceOffset: { x: 0, y: 0 }, targetOffset: { x: 0, y: 0 } };
+  }
+
+  // Find parallel edges (edges between the same nodes)
   const parallelEdges = edges.filter(
-    edge => (edge.source === sourceId && edge.target === targetId) ||
-            (edge.source === targetId && edge.target === sourceId)
+    (edge) => (
+      (edge.source === source?.id && edge.target === target?.id) ||
+      (edge.source === target?.id && edge.target === source?.id)
+    )
   );
+
+  // Debug: Log parallel edges found
+  console.debug('Parallel edges:', {
+    count: parallelEdges.length,
+    edges: parallelEdges.map(e => e.id)
+  });
 
   if (parallelEdges.length <= 1) {
     return { sourceOffset: { x: 0, y: 0 }, targetOffset: { x: 0, y: 0 } };
   }
 
-  // Find the index of the current edge
-  const edgeIndex = parallelEdges.findIndex(edge => edge.id === currentEdgeId);
-  const totalEdges = parallelEdges.length;
+  // Get node positions safely
+  const sourceX = source?.positionAbsolute?.x ?? source?.position?.x ?? 0;
+  const sourceY = source?.positionAbsolute?.y ?? source?.position?.y ?? 0;
+  const targetX = target?.positionAbsolute?.x ?? target?.position?.x ?? 0;
+  const targetY = target?.positionAbsolute?.y ?? target?.position?.y ?? 0;
+
+  // Calculate angle between nodes
+  const dx = targetX - sourceX;
+  const dy = targetY - sourceY;
+  const angle = Math.atan2(dy, dx);
+
+  // Find index of current edge
+  const edgeIndex = parallelEdges.findIndex((edge) => edge.id === edgeId);
+  const centerIndex = (parallelEdges.length - 1) / 2;
   
-  // Calculate offset based on edge position
-  const offset = (edgeIndex - (totalEdges - 1) / 2) * spacing;
-  
+  // Adjust spacing based on number of edges (decreases as edge count increases)
+  const baseSpacing = Math.max(8 - parallelEdges.length, 2); // Minimum 4px spacing
+  const offset = (edgeIndex - centerIndex) * baseSpacing;
+
+  // Calculate perpendicular offsets based on angle
+  const perpX = Math.sin(angle) * offset;
+  const perpY = -Math.cos(angle) * offset;
+
+  // Debug: Log calculated offsets
+  console.debug('Edge offset calculation:', {
+    edgeId,
+    edgeIndex,
+    centerIndex,
+    angle: (angle * 180 / Math.PI).toFixed(2) + '°',
+    offset,
+    perpX,
+    perpY
+  });
+
   return {
-    sourceOffset: { x: offset, y: offset },
-    targetOffset: { x: offset, y: offset }
+    sourceOffset: { x: perpX, y: perpY },
+    targetOffset: { x: perpX, y: perpY }
   };
 }
 
@@ -140,7 +175,7 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
   const { sx, sy, tx, ty } = getEdgeParams(sourceNode, targetNode);
   
   // Calculate offset if there are multiple edges between these nodes
-  const { sourceOffset, targetOffset } = calculateParallelOffset(source, target, id, edges);
+  const { sourceOffset, targetOffset } = calculateParallelOffset(sourceNode, targetNode, id, edges);
 
   const warningShownRef = useRef<{ [key: string]: boolean }>({});
   const showWarningOnce = useCallback((direction: string) => {
@@ -217,15 +252,18 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
     }
   }
 
+  const defaultStyle = {
+    strokeWidth: .75,  // Thinner line
+    ...style
+  };
+
   return (
     <>
       <path
         className={`floating-edge-path ${selected ? 'selected' : ''}`}
         d={edgePath}
         fill="none"
-        strokeWidth={2}
-        stroke="currentColor"
-        style={style}
+        style={defaultStyle}
       />
       {data?.showLabels && (
         <>
