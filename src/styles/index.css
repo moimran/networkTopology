@@ -1,0 +1,35 @@
+/* Import all component styles */
+@import './variables.css';
+@import './components/networkNode.css';
+@import './components/networkTopology.css';
+
+/* Global styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility classes */
+.flex {
+  display: flex;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.hidden {
+  display: none;
+}
+
+/* React Flow overrides */
+.react-flow__attribution {
+  display: none;
+}

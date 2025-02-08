@@ -1,0 +1,52 @@
+@import '../variables.css';
+
+/* Node container */
+.network-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+/* Handle styles */
+.device-handle {
+  width: 8px !important;
+  height: 8px !important;
+  background: var(--device-handle-bg-color) !important;
+  border: 1px solid var(--device-handle-border-color) !important;
+  transition: all 0.2s ease;
+  cursor: crosshair;
+}
+
+.device-handle:hover {
+  width: 10px !important;
+  height: 10px !important;
+  background: var(--device-handle-hover-bg-color) !important;
+  border-color: var(--device-handle-hover-border-color) !important;
+  transform: scale(1.2);
+}
+
+/* Node content */
+.node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.device-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.node-label {
+  font-weight: 500;
+  font-size: 12px;
+  color: #333;
+  text-align: center;
+  margin-top: 4px;
+  background: transparent;
+}

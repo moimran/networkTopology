@@ -1,0 +1,96 @@
+.edge-label-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.edge-label {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 12px;
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  fill: #fff;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.interface-label {
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.interface-label.source {
+  background: #00c853;
+  color: white;
+}
+
+.interface-label.target {
+  background: #2196f3;
+  color: white;
+}
+
+.floating-edge-path {
+  stroke-width: 2;
+  transition: stroke-width 0.2s, filter 0.2s;
+  cursor: pointer;
+}
+
+.floating-edge-path:hover {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+
+.floating-edge-path.selected {
+  stroke-width: 3;
+  stroke: #3b82f6;
+  filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5));
+}
+
+.floating-edge-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #0077be;
+  border-radius: 12px;
+  padding: 0px 6px;
+  font-size: 7px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #0077be;
+  pointer-events: all;
+  white-space: nowrap;
+  user-select: none;
+  cursor: default;
+  min-width: 20px;
+  min-height: 11px;
+  line-height: 1;
+}
+
+.floating-edge-label:hover {
+  background: #f0f9ff;
+}
+
+.floating-edge-label-background {
+  fill: white;
+  stroke: #ccc;
+  stroke-width: 1;
+  rx: 4;
+  ry: 4;
+}
+
+.edgebutton-foreignobject div {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+}

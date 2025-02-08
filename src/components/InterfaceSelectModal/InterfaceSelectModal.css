@@ -1,0 +1,56 @@
+.interface-select-modal {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  min-width: 200px;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #666;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-button:hover {
+  background: #f0f0f0;
+  color: #ff4444;
+}
+
+.interface-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.interface-select:focus {
+  border-color: #4a90e2;
+}
+
+.interface-select option {
+  padding: 8px;
+}
+
+.interface-select option:disabled {
+  color: #999;
+  font-style: italic;
+  background-color: #f5f5f5;
+}

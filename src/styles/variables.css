@@ -1,0 +1,41 @@
+:root {
+  /* Colors */
+  --node-bg-color: white;
+  --node-border-color: #ddd;
+  --node-shadow-color: rgba(0, 0, 0, 0.12);
+  --handle-bg-color: #4CAF50;
+  --handle-border-color: white;
+  --handle-shadow-color: rgba(0, 0, 0, 0.2);
+  --edge-color: #b1b1b7;
+  --edge-selected-color: #1a192b;
+  --border-color: #eee;
+  --sidebar-bg-color: #f8f8f8;
+  
+  /* Device Node Colors */
+  --device-node-bg-color: #2b2b3b;
+  --device-node-border-color: #3d3d4d;
+  --device-node-text-color: #ffffff;
+  --device-info-text-color: #b4b4c4;
+  --device-handle-bg-color: #6366f1;
+  --device-handle-border-color: #ffffff;
+  --device-handle-hover-bg-color: #818cf8;
+  
+  /* Sizes */
+  --node-padding: 10px;
+  --node-border-radius: 5px;
+  --handle-size: 8px;
+  --handle-border-width: 2px;
+  --sidebar-width: 250px;
+  --sidebar-padding: 15px;
+  
+  /* Typography */
+  --node-font-size: 12px;
+  --node-label-margin: 4px;
+  
+  /* Transitions */
+  --hover-transition: 0.2s ease;
+  
+  /* Z-indices */
+  --sidebar-z-index: 5;
+  --node-z-index: 1;
+}
