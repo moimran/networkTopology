@@ -4,27 +4,43 @@
     "interfaces": [
       {
         "interfaceName": "GigabitEthernet0/0",
+        "interfaceLabel": "Gi0/0",
         "interfaceType": "ethernet"
       },
       {
         "interfaceName": "GigabitEthernet0/1",
+        "interfaceLabel": "Gi0/1",
         "interfaceType": "ethernet"
       },
       {
         "interfaceName": "GigabitEthernet0/2",
+        "interfaceLabel": "Gi0/2",
         "interfaceType": "ethernet"
       },
       {
         "interfaceName": "GigabitEthernet0/3",
+        "interfaceLabel": "Gi0/3",
         "interfaceType": "ethernet"
       },
       {
         "interfaceName": "Serial0/0",
+        "interfaceLabel": "Si0/0",
         "interfaceType": "serial"
       },
       {
         "interfaceName": "Serial0/1",
+        "interfaceLabel": "Si0/1",
         "interfaceType": "serial"
+      },
+      {
+        "interfaceName": "Ethernet0/0",
+        "interfaceLabel": "E0/0",
+        "interfaceType": "ethernet"
+      },
+      {
+        "interfaceName": "Ethernet0/1",
+        "interfaceLabel": "E0/1",
+        "interfaceType": "ethernet"
       }
     ]
   }

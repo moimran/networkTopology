@@ -210,6 +210,11 @@ const NetworkTopology = () => {
           edgeType: currentEdgeType,
           sourceInterface: pendingConnection.sourceInterface,
           targetInterface: interfaceName,
+          // Find and store interface labels
+          sourceInterfaceLabel: getNodeInterfaces(pendingConnection.sourceNodeId)
+            .find(i => i.interfaceName === pendingConnection.sourceInterface)?.interfaceLabel,
+          targetInterfaceLabel: getNodeInterfaces(selectedNode)
+            .find(i => i.interfaceName === interfaceName)?.interfaceLabel,
           showLabels: showLabels,
         },
       };
@@ -346,6 +351,24 @@ const NetworkTopology = () => {
     });
   }, [selectedEdges, setEdges]);
 
+  // Handle click outside of nodes to clear interface selection
+  const onPaneClickOutside = useCallback(() => {
+    setInterfaceModal({
+      show: false,
+      position: { x: 0, y: 0 },
+      nodeId: null,
+    });
+    setPendingConnection(null);
+    // Clear selected interface from all nodes
+    setNodes(nodes => nodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        selectedInterface: undefined,
+      },
+    })));
+  }, []);
+
   if (isLoading) {
     return <div>Loading device configuration...</div>;
   }
@@ -374,12 +397,12 @@ const NetworkTopology = () => {
             edges={edges}
             onNodesChange={handleNodesChange}
             onEdgesChange={onEdgesChange}
-            onInit={setReactFlowInstance}
+            onInit={onInit}
             onDrop={onDrop}
             onDragOver={onDragOver}
             onNodeContextMenu={onNodeContextMenu}
             onEdgeClick={onEdgeClick}
-            onPaneClick={onPaneClick}
+            onPaneClick={onPaneClickOutside}
             onNodeClick={onNodeClick}
             onNodeDragStart={onNodeDragStart}
             nodeTypes={nodeTypes}

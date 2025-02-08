@@ -6,6 +6,8 @@ export type FloatingEdgeData = {
   edgeType?: 'default' | 'straight' | 'step' | 'smoothstep' | 'angle-right' | 'angle-left' | 'angle-top' | 'angle-bottom';
   sourceInterface?: string;
   targetInterface?: string;
+  sourceInterfaceLabel?: string;
+  targetInterfaceLabel?: string;
   showLabels?: boolean;
 };
 
@@ -257,38 +259,75 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
     ...style
   };
 
+  // Calculate label positions near the nodes
+  const getSourceLabelPosition = () => {
+    const distance = 40; // Distance from node
+    const angle = Math.atan2(ty - sy, tx - sx);
+    return {
+      x: sx + Math.cos(angle) * distance,
+      y: sy + Math.sin(angle) * distance
+    };
+  };
+
+  const getTargetLabelPosition = () => {
+    const distance = 40; // Distance from node
+    const angle = Math.atan2(ty - sy, tx - sx);
+    return {
+      x: tx - Math.cos(angle) * distance,
+      y: ty - Math.sin(angle) * distance
+    };
+  };
+
+  const sourceLabelPos = getSourceLabelPosition();
+  const targetLabelPos = getTargetLabelPosition();
+  // Use interface labels if available, fall back to interface names
+  const sourceText = data?.sourceInterfaceLabel || data?.sourceInterface || 'E1/1';
+  const targetText = data?.targetInterfaceLabel || data?.targetInterface || 'E1/1';
+
   return (
     <>
+      {/* Edge path */}
       <path
-        className={`floating-edge-path ${selected ? 'selected' : ''}`}
+        id={id}
+        className="react-flow__edge-path"
         d={edgePath}
-        fill="none"
-        style={defaultStyle}
+        style={{
+          ...defaultStyle,
+          zIndex: 1
+        }}
       />
       {data?.showLabels && (
         <>
-          {data.sourceInterface && (
-            <text
-              x={sx + sourceOffset.x}
-              y={sy + sourceOffset.y - 10}
-              textAnchor="middle"
-              alignmentBaseline="middle"
-              className="edge-label"
+          {/* Source Label */}
+          <g transform={`translate(${sourceLabelPos.x}, ${sourceLabelPos.y})`}>
+            <foreignObject
+              width={26}
+              height={12}
+              x={-16}
+              y={-7}
+              className="edgebutton-foreignobject"
+              requiredExtensions="http://www.w3.org/1999/xhtml"
             >
-              {data.sourceInterface}
-            </text>
-          )}
-          {data.targetInterface && (
-            <text
-              x={tx + targetOffset.x}
-              y={ty + targetOffset.y - 10}
-              textAnchor="middle"
-              alignmentBaseline="middle"
-              className="edge-label"
+              <div className="floating-edge-label">
+                {sourceText}
+              </div>
+            </foreignObject>
+          </g>
+          {/* Target Label */}
+          <g transform={`translate(${targetLabelPos.x}, ${targetLabelPos.y})`}>
+            <foreignObject
+              width={26}
+              height={12}
+              x={-16}
+              y={-7}
+              className="edgebutton-foreignobject"
+              requiredExtensions="http://www.w3.org/1999/xhtml"
             >
-              {data.targetInterface}
-            </text>
-          )}
+              <div className="floating-edge-label">
+                {targetText}
+              </div>
+            </foreignObject>
+          </g>
         </>
       )}
     </>
