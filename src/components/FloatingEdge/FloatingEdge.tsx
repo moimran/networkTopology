@@ -1,4 +1,4 @@
-import { EdgeProps, useStore, getBezierPath, getStraightPath, getSmoothStepPath, Position } from '@xyflow/react';
+import { EdgeProps, useStore, getBezierPath, getStraightPath, getSmoothStepPath, Position, EdgeLabelRenderer } from '@xyflow/react';
 import { getEdgeParams } from '../../utils/edgeUtils';
 import { useRef, useCallback } from 'react';
 
@@ -193,35 +193,45 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
 
   // Get the appropriate path based on edge type
   let edgePath = '';
+  let [sourceX, sourceY] = [sx + sourceOffset.x, sy + sourceOffset.y];
+  let [targetX, targetY] = [tx + targetOffset.x, ty + targetOffset.y];
+
+  // Calculate label positions at a fixed distance from nodes
+  const LABEL_DISTANCE = 40; // pixels from node
+  let sourceLabelX = 0, sourceLabelY = 0;
+  let targetLabelX = 0, targetLabelY = 0;
 
   switch (data?.edgeType) {
     case 'straight': {
       [edgePath] = getStraightPath({
-        sourceX: sx + sourceOffset.x,
-        sourceY: sy + sourceOffset.y,
-        targetX: tx + targetOffset.x,
-        targetY: ty + targetOffset.y,
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
       });
+      // Calculate angle between nodes
+      const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
+      sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
+      sourceLabelY = sourceY + Math.sin(angle) * LABEL_DISTANCE;
+      targetLabelX = targetX - Math.cos(angle) * LABEL_DISTANCE;
+      targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
       break;
     }
-    case 'step': {
-      [edgePath] = getSmoothStepPath({
-        sourceX: sx + sourceOffset.x,
-        sourceY: sy + sourceOffset.y,
-        targetX: tx + targetOffset.x,
-        targetY: ty + targetOffset.y,
-        borderRadius: 0,
-      });
-      break;
-    }
+    case 'step':
     case 'smoothstep': {
+      const borderRadius = data?.edgeType === 'step' ? 0 : 16;
       [edgePath] = getSmoothStepPath({
-        sourceX: sx + sourceOffset.x,
-        sourceY: sy + sourceOffset.y,
-        targetX: tx + targetOffset.x,
-        targetY: ty + targetOffset.y,
-        borderRadius: 16,
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
+        borderRadius,
       });
+      // For step edges, position labels horizontally from nodes
+      sourceLabelX = sourceX + LABEL_DISTANCE;
+      sourceLabelY = sourceY;
+      targetLabelX = targetX - LABEL_DISTANCE;
+      targetLabelY = targetY;
       break;
     }
     case 'angle-right':
@@ -233,102 +243,121 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
       
       if (anglePath) {
         edgePath = anglePath;
+        // Position labels based on the angle direction
+        switch (direction) {
+          case 'right':
+            sourceLabelX = sourceX + LABEL_DISTANCE;
+            sourceLabelY = sourceY;
+            targetLabelX = targetX - LABEL_DISTANCE;
+            targetLabelY = targetY;
+            break;
+          case 'left':
+            sourceLabelX = sourceX - LABEL_DISTANCE;
+            sourceLabelY = sourceY;
+            targetLabelX = targetX + LABEL_DISTANCE;
+            targetLabelY = targetY;
+            break;
+          case 'top':
+            sourceLabelX = sourceX;
+            sourceLabelY = sourceY - LABEL_DISTANCE;
+            targetLabelX = targetX;
+            targetLabelY = targetY + LABEL_DISTANCE;
+            break;
+          case 'bottom':
+            sourceLabelX = sourceX;
+            sourceLabelY = sourceY + LABEL_DISTANCE;
+            targetLabelX = targetX;
+            targetLabelY = targetY - LABEL_DISTANCE;
+            break;
+        }
       } else {
         showWarningOnce(direction);
-        edgePath = getStraightPath({
-          sourceX: sx + sourceOffset.x,
-          sourceY: sy + sourceOffset.y,
-          targetX: tx + targetOffset.x,
-          targetY: ty + targetOffset.y,
-        })[0];
+        [edgePath] = getStraightPath({
+          sourceX,
+          sourceY,
+          targetX,
+          targetY,
+        });
+        const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
+        sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
+        sourceLabelY = sourceY + Math.sin(angle) * LABEL_DISTANCE;
+        targetLabelX = targetX - Math.cos(angle) * LABEL_DISTANCE;
+        targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
       }
       break;
     }
     default: {
       [edgePath] = getBezierPath({
-        sourceX: sx + sourceOffset.x,
-        sourceY: sy + sourceOffset.y,
-        targetX: tx + targetOffset.x,
-        targetY: ty + targetOffset.y,
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
       });
+      // For bezier curves, use the same approach as straight lines
+      const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
+      sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
+      sourceLabelY = sourceY + Math.sin(angle) * LABEL_DISTANCE;
+      targetLabelX = targetX - Math.cos(angle) * LABEL_DISTANCE;
+      targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
     }
   }
 
   const defaultStyle = {
-    strokeWidth: .75,  // Thinner line
+    strokeWidth: 1.5,
+    stroke: '#b1b1b7',
     ...style
   };
 
-  // Calculate label positions near the nodes
-  const getSourceLabelPosition = () => {
-    const distance = 40; // Distance from node
-    const angle = Math.atan2(ty - sy, tx - sx);
-    return {
-      x: sx + Math.cos(angle) * distance,
-      y: sy + Math.sin(angle) * distance
-    };
-  };
-
-  const getTargetLabelPosition = () => {
-    const distance = 40; // Distance from node
-    const angle = Math.atan2(ty - sy, tx - sx);
-    return {
-      x: tx - Math.cos(angle) * distance,
-      y: ty - Math.sin(angle) * distance
-    };
-  };
-
-  const sourceLabelPos = getSourceLabelPosition();
-  const targetLabelPos = getTargetLabelPosition();
   // Use interface labels if available, fall back to interface names
   const sourceText = data?.sourceInterfaceLabel || data?.sourceInterface || 'E1/1';
   const targetText = data?.targetInterfaceLabel || data?.targetInterface || 'E1/1';
 
+  const labelStyle = {
+    position: 'absolute',
+    background: '#e6f3ff',
+    padding: '1px 2px',
+    borderRadius: '4px',
+    fontSize: '8px',
+    fontWeight: 500,
+    color: '#333',
+    border: '1px solid #ccc',
+    boxShadow: '0 0 2px rgba(0,0,0,0.1)',
+    pointerEvents: 'all',
+    transform: 'translate(-50%, -50%)', // Center the label on the point
+    zIndex: 1000,
+  } as const;
+
   return (
     <>
-      {/* Edge path */}
       <path
         id={id}
         className="react-flow__edge-path"
         d={edgePath}
-        style={{
-          ...defaultStyle,
-          zIndex: 1
-        }}
+        style={defaultStyle}
       />
       {data?.showLabels && (
-        <>
-          {/* Source Label */}
-          <g transform={`translate(${sourceLabelPos.x}, ${sourceLabelPos.y})`}>
-            <foreignObject
-              width={26}
-              height={12}
-              x={-16}
-              y={-7}
-              className="edgebutton-foreignobject"
-              requiredExtensions="http://www.w3.org/1999/xhtml"
-            >
-              <div className="floating-edge-label">
-                {sourceText}
-              </div>
-            </foreignObject>
-          </g>
-          {/* Target Label */}
-          <g transform={`translate(${targetLabelPos.x}, ${targetLabelPos.y})`}>
-            <foreignObject
-              width={26}
-              height={12}
-              x={-16}
-              y={-7}
-              className="edgebutton-foreignobject"
-              requiredExtensions="http://www.w3.org/1999/xhtml"
-            >
-              <div className="floating-edge-label">
-                {targetText}
-              </div>
-            </foreignObject>
-          </g>
-        </>
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              ...labelStyle,
+              left: sourceLabelX,
+              top: sourceLabelY,
+            }}
+            className="nodrag nopan"
+          >
+            {sourceText}
+          </div>
+          <div
+            style={{
+              ...labelStyle,
+              left: targetLabelX,
+              top: targetLabelY,
+            }}
+            className="nodrag nopan"
+          >
+            {targetText}
+          </div>
+        </EdgeLabelRenderer>
       )}
     </>
   );
