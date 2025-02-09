@@ -104,6 +104,7 @@ export function calculate90DegreePath(
   switch (direction) {
     case 'right':
     case 'left': {
+      console.log('Horizontal direction:', { sy, tx, direction })
       // For horizontal directions:
       // 1. Move horizontally to target's x-coordinate while staying at source's y-coordinate
       path.push(`L ${tx} ${sy}`);
@@ -115,6 +116,7 @@ export function calculate90DegreePath(
     case 'bottom': {
       // For vertical directions:
       // 1. Move vertically to target's y-coordinate while staying at source's x-coordinate
+      console.log('Vertical direction:', { sx, ty, direction })
       path.push(`L ${sx} ${ty}`);
       // 2. Move horizontally to target's x-coordinate
       path.push(`L ${tx} ${ty}`);

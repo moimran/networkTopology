@@ -13,7 +13,8 @@ import {
 import { FloatingEdgeData, EdgePositions } from '../../utils/types/edge.types';
 
 /**
- * Default style for edge labels
+ * Default style configuration for edge labels
+ * Provides a clean, readable appearance with a light background and subtle shadow
  */
 const labelStyle = {
   position: 'absolute',
@@ -31,15 +32,33 @@ const labelStyle = {
 } as const;
 
 /**
- * FloatingEdge component for rendering edges with labels
+ * FloatingEdge Component
+ * 
+ * A specialized edge component that supports multiple edge types and automatic label positioning.
+ * This component handles different edge styles including:
+ * - Straight edges
+ * - Step edges (with optional smoothing)
+ * - 90-degree angled edges in four directions (right, left, top, bottom)
+ * 
+ * Features:
+ * - Automatic parallel edge offsetting to prevent overlaps
+ * - Dynamic label positioning based on edge type
+ * - Overlap detection and warning system
+ * - Support for custom edge styles and labels
+ * 
+ * @param props EdgeProps containing edge data and style information
+ * @returns JSX.Element | null
  */
 const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgeProps<FloatingEdgeData>) => {
+  // State to store calculated positions for edge path and labels
   const [labelPositions, setLabelPositions] = useState<EdgePositions>({
     source: { x: 0, y: 0 },
     target: { x: 0, y: 0 },
     path: ''
   });
 
+  // Get nodes and edges from React Flow store
+  // Using selector pattern to optimize re-renders
   const { sourceNode, targetNode, edges } = useStore(
     (s) => ({
       sourceNode: s.nodeLookup.get(source),
@@ -47,6 +66,7 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
       edges: s.edges
     }),
     (prev, next) => {
+      // Custom comparison function to prevent unnecessary updates
       const sourceEqual = 
         prev.sourceNode?.position.x === next.sourceNode?.position.x &&
         prev.sourceNode?.position.y === next.sourceNode?.position.y;
@@ -58,7 +78,10 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
     }
   );
 
+  // Ref to track warning messages and prevent duplicates
   const warningShownRef = useRef<{ [key: string]: boolean }>({});
+  
+  // Show warning only once for each edge/direction combination
   const showWarningOnce = useCallback((direction: string) => {
     const warningKey = `${id}-${direction}`;
     if (!warningShownRef.current[warningKey]) {
@@ -70,14 +93,18 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
     }
   }, [id, source, target]);
 
+  // Calculate edge path and label positions whenever nodes move or edge data changes
   useLayoutEffect(() => {
     if (!sourceNode || !targetNode) {
       return;
     }
 
+    // Get base edge parameters and calculate offsets for parallel edges
     const { sx, sy, tx, ty } = getEdgeParams(sourceNode, targetNode);
+    console.log('get params sx, sy, tx, ty', sx, sy, tx, ty, data);
     const { sourceOffset, targetOffset } = calculateParallelOffset(sourceNode, targetNode, id, edges);
 
+    // Apply offsets to edge endpoints
     const sourceX = sx + sourceOffset.x;
     const sourceY = sy + sourceOffset.y;
     const targetX = tx + targetOffset.x;
@@ -86,8 +113,10 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
     let edgePath = '';
     let labelPos;
 
+    // Calculate path based on edge type
     switch (data?.edgeType) {
       case 'straight': {
+        // Simple straight line between points
         [edgePath] = getStraightPath({
           sourceX, sourceY, targetX, targetY
         });
@@ -96,6 +125,7 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
       }
       case 'step':
       case 'smoothstep': {
+        // Step path with optional smoothing
         const borderRadius = data?.edgeType === 'step' ? 0 : 16;
         [edgePath] = getSmoothStepPath({
           sourceX, sourceY, targetX, targetY, borderRadius
@@ -107,6 +137,7 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
       case 'angle-left':
       case 'angle-top':
       case 'angle-bottom': {
+        // 90-degree angled path
         const direction = data.edgeType.split('-')[1] as 'right' | 'left' | 'top' | 'bottom';
         const anglePath = calculate90DegreePath(sourceX, sourceY, targetX, targetY, direction, sourceOffset, targetOffset);
         
@@ -114,6 +145,7 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
           edgePath = anglePath;
           labelPos = calculateAngleLabelPositions(sourceX, sourceY, targetX, targetY, direction);
         } else {
+          // Fallback to straight path if 90-degree angle isn't possible
           showWarningOnce(direction);
           [edgePath] = getStraightPath({
             sourceX, sourceY, targetX, targetY
@@ -123,6 +155,7 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
         break;
       }
       default: {
+        // Default to bezier curve for unknown edge types
         [edgePath] = getBezierPath({
           sourceX, sourceY, targetX, targetY
         });
@@ -130,14 +163,15 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
       }
     }
 
+    // Update state with calculated positions
     setLabelPositions({
       source: labelPos.source,
       target: labelPos.target,
       path: edgePath
     });
-  }, [sourceNode, targetNode, data?.edgeType, edges, id, source, target]);
+  }, [sourceNode, targetNode, data?.edgeType, edges, id, source, target, showWarningOnce]);
 
-  // Add overlap detection
+  // Detect and log edge overlaps for debugging
   useLayoutEffect(() => {
     if (!sourceNode || !targetNode) return;
 
@@ -168,20 +202,25 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
     }
   }, [id, source, target, edges, data?.edgeType, sourceNode, targetNode]);
 
+  // Don't render if either node is missing
   if (!sourceNode || !targetNode) {
     return null;
   }
 
   return (
     <>
+      {/* Edge path */}
       <path
         id={id}
         className="react-flow__edge-path"
         d={labelPositions.path}
         style={style}
       />
+      
+      {/* Edge labels */}
       {data?.showLabels && (
         <EdgeLabelRenderer>
+          {/* Source interface label */}
           <div
             style={{
               ...labelStyle,
@@ -192,6 +231,8 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
           >
             {data?.sourceInterfaceLabel || data?.sourceInterface || 'E1/1'}
           </div>
+          
+          {/* Target interface label */}
           <div
             style={{
               ...labelStyle,
