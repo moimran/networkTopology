@@ -7,14 +7,14 @@ export const LABEL_DISTANCE = 40;
 export const MIN_LABEL_DISTANCE = 20;
 
 // Edge spacing
-export const MIN_EDGE_SPACING = 2;
+export const MIN_EDGE_SPACING = 3;
 export const MAX_EDGE_SPACING = 8;
 
 // Angle calculations
 export const MIN_ANGLE_DISTANCE = 20;
 
 // Debug settings
-export const DEBUG_ENABLED = process.env.NODE_ENV === 'development';
+export const DEBUG_ENABLED = true //process.env.NODE_ENV === 'development';
 
 // Default label style
 export const DEFAULT_LABEL_STYLE = {

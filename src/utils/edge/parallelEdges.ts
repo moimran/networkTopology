@@ -73,9 +73,8 @@ export function calculateParallelOffset(
   // This gives us the direction of the line between the nodes
   const dx = targetX - sourceX;
   const dy = targetY - sourceY;
-  console.log('Angle calculation:', { dx, dy });
   const angle = Math.atan2(dy, dx);
-  console.log('Calculated angle:', angle);
+
 
   // Find the relative position of this edge among parallel edges
   const edgeIndex = parallelEdges.findIndex((edge) => edge.id === edgeId);
@@ -113,6 +112,53 @@ export function calculateParallelOffset(
 }
 
 /**
+ * Detects overlapping edges at a specific node
+ * @param nodeId - ID of the node to check for overlaps
+ * @param edgeId - ID of the current edge
+ * @param edgeType - Type of the current edge
+ * @param connections - Array of edges connected to the node
+ * @returns Object containing overlap information
+ */
+export function detectOverlappingEdges(
+  nodeId: string,
+  edgeId: string,
+  edgeType?: string,
+  connections: Edge[] = []
+) {
+  const overlappingEdges = {
+    source: [] as Edge[],
+    target: [] as Edge[]
+  };
+
+  const counts = {
+    source: 0,
+    target: 0
+  };
+
+  // Group edges by their connection to the node
+  connections.forEach(edge => {
+    if (edge.id === edgeId) return; // Skip current edge
+
+    if (edge.source === nodeId) {
+      overlappingEdges.source.push(edge);
+      counts.source++;
+    }
+    if (edge.target === nodeId) {
+      overlappingEdges.target.push(edge);
+      counts.target++;
+    }
+  });
+
+  const hasOverlap = counts.source > 0 || counts.target > 0;
+
+  return {
+    hasOverlap,
+    overlappingEdges,
+    counts
+  };
+}
+
+/**
  * Calculates offset for edges that share the same source node and have 90-degree angles.
  * This prevents overlapping when multiple edges start from the same point.
  * 
@@ -135,11 +181,15 @@ export function calculate90DegreeOffset(
   edges: Edge[],
   direction: 'right' | 'left' | 'top' | 'bottom'
 ): EdgeOffsets {
+  
+  console.log('Calculating 90 degree offset for edge:', edgeId);
+
   if (!source || !target) {
     DEBUG_ENABLED && console.debug('Missing node data:', { source, target, edgeId });
     return { sourceOffset: { x: 0, y: 0 }, targetOffset: { x: 0, y: 0 } };
   }
 
+  console.log('edges',edges)
   // Find edges that share the same source node
   const sourceEdges = edges.filter(edge => edge.source === source.id);
   
