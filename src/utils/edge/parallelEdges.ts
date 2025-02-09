@@ -111,3 +111,82 @@ export function calculateParallelOffset(
     targetOffset: { x: perpX, y: perpY }
   };
 }
+
+/**
+ * Calculates offset for edges that share the same source node and have 90-degree angles.
+ * This prevents overlapping when multiple edges start from the same point.
+ * 
+ * The function works by:
+ * 1. Finding all edges that share the same source node
+ * 2. Calculating offset based on the edge's position and direction
+ * 3. Applying smaller spacing for shared source edges
+ * 
+ * @param source Source node
+ * @param target Target node
+ * @param edgeId Current edge ID
+ * @param edges All edges in the graph
+ * @param direction Direction of the current edge (right, left, top, bottom)
+ * @returns EdgeOffsets with adjusted start positions
+ */
+export function calculate90DegreeOffset(
+  source: Node,
+  target: Node,
+  edgeId: string,
+  edges: Edge[],
+  direction: 'right' | 'left' | 'top' | 'bottom'
+): EdgeOffsets {
+  if (!source || !target) {
+    DEBUG_ENABLED && console.debug('Missing node data:', { source, target, edgeId });
+    return { sourceOffset: { x: 0, y: 0 }, targetOffset: { x: 0, y: 0 } };
+  }
+
+  // Find edges that share the same source node
+  const sourceEdges = edges.filter(edge => edge.source === source.id);
+  
+  // If no other edges from this source, no offset needed
+  if (sourceEdges.length <= 1) {
+    return { sourceOffset: { x: 0, y: 0 }, targetOffset: { x: 0, y: 0 } };
+  }
+
+  DEBUG_ENABLED && console.debug('Edge analysis:', {
+    sourceEdgesCount: sourceEdges.length,
+    edges: sourceEdges.map(e => e.id)
+  });
+
+  // Get node positions
+  const sourceX = source?.positionAbsolute?.x ?? source?.position?.x ?? 0;
+  const sourceY = source?.positionAbsolute?.y ?? source?.position?.y ?? 0;
+  const targetX = target?.positionAbsolute?.x ?? target?.position?.x ?? 0;
+  const targetY = target?.positionAbsolute?.y ?? target?.position?.y ?? 0;
+
+  // Calculate relative position of current edge
+  const edgeIndex = sourceEdges.findIndex((edge) => edge.id === edgeId);
+  const totalEdges = sourceEdges.length;
+  
+  // Use smaller spacing for shared source edges
+  const baseSpacing = Math.max(MAX_EDGE_SPACING / 2 - totalEdges, MIN_EDGE_SPACING);
+  
+  // Calculate center index and offset
+  const centerIndex = (totalEdges - 1) / 2;
+  const offset = (edgeIndex - centerIndex) * baseSpacing;
+
+  // Calculate dx and dy for direction determination
+  const dx = targetX - sourceX;
+  const dy = targetY - sourceY;
+  const isHorizontal = Math.abs(dx) > Math.abs(dy);
+
+  // For horizontal edges (right/left), offset vertically
+  if (isHorizontal || direction === 'right' || direction === 'left') {
+    return {
+      sourceOffset: { x: 0, y: offset },
+      targetOffset: { x: 0, y: offset }
+    };
+  }
+  // For vertical edges (top/bottom), offset horizontally
+  else {
+    return {
+      sourceOffset: { x: offset, y: 0 },
+      targetOffset: { x: offset, y: 0 }
+    };
+  }
+}

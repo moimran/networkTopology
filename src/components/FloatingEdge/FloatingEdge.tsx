@@ -4,6 +4,7 @@ import { useRef, useCallback, memo, useLayoutEffect, useState } from 'react';
 import {
   calculate90DegreePath,
   calculateParallelOffset,
+  calculate90DegreeOffset,
   calculateStraightLabelPositions,
   calculateStepLabelPositions,
   calculateAngleLabelPositions,
@@ -102,7 +103,16 @@ const FloatingEdge = memo(({ id, source, target, style, data, selected }: EdgePr
     // Get base edge parameters and calculate offsets for parallel edges
     const { sx, sy, tx, ty } = getEdgeParams(sourceNode, targetNode);
     console.log('get params sx, sy, tx, ty', sx, sy, tx, ty, data);
-    const { sourceOffset, targetOffset } = calculateParallelOffset(sourceNode, targetNode, id, edges);
+    
+    let sourceOffset, targetOffset;
+    
+    // Use different offset calculation for 90-degree angles
+    if (data?.edgeType?.startsWith('angle-')) {
+      const direction = data.edgeType.split('-')[1] as 'right' | 'left' | 'top' | 'bottom';
+      ({ sourceOffset, targetOffset } = calculate90DegreeOffset(sourceNode, targetNode, id, edges, direction));
+    } else {
+      ({ sourceOffset, targetOffset } = calculateParallelOffset(sourceNode, targetNode, id, edges));
+    }
 
     // Apply offsets to edge endpoints
     const sourceX = sx + sourceOffset.x;
