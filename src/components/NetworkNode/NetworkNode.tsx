@@ -1,5 +1,5 @@
-import { memo, useEffect, useCallback, useMemo } from 'react';
-import { Handle, NodeProps, Position } from '@xyflow/react';
+import { memo, useEffect, useState } from 'react';
+import { Handle, NodeProps, Position, NodeToolbar } from '@xyflow/react';
 import { DeviceNodeData } from '../../types/device';
 import { logger } from '../../utils/logger';
 import './NetworkNode.css';
@@ -44,7 +44,8 @@ const getHandleStyle = (position: Position, index: number, total: number) => {
   }
 };
 
-const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
+const NetworkNode = ({ data, id, selected }: NodeProps<DeviceNodeData>) => {
+  const [isTooltipVisible, setTooltipVisible] = useState(false);
   const handles = data.handles || {};
 
   // Get the selected handle ID based on the selected interface name
@@ -64,21 +65,47 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
 
   useEffect(() => {
     logger.debug('Device node handles', {
-      id,
-      deviceName: data.config.deviceName,
+      nodeId: id,
+      handles,
       selectedInterface: data.selectedInterface,
-      handles: Object.keys(handles).map(key => ({
-        id: key,
-        position: handles[key].position,
-        type: handles[key].interface.interfaceType
-      }))
+      selectedHandleId
     });
   }, [id, handles, data]);
 
   return (
     <div 
       className="network-node"
+      onMouseEnter={() => setTooltipVisible(true)}
+      onMouseLeave={() => setTooltipVisible(false)}
+      onFocus={() => setTooltipVisible(true)}
+      onBlur={() => setTooltipVisible(false)}
+      tabIndex={0}
     >
+      {/* Tooltip */}
+      <NodeToolbar
+        isVisible={isTooltipVisible || selected}
+        position="top"
+        style={{
+          background: '#f8f9fa',
+          padding: '8px',
+          borderRadius: '4px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          fontSize: '12px',
+          color: '#333',
+          zIndex: 1000,
+        }}
+      >
+        <div>
+          <strong>Node ID:</strong> {id}
+        </div>
+        <div>
+          <strong>Label:</strong> {data.label || data.config.deviceName}
+        </div>
+        <div>
+          <strong>Type:</strong> {data.type || 'Device'}
+        </div>
+      </NodeToolbar>
+
       {/* Handles */}
       {Object.entries(handlesByPosition).map(([position, positionHandles]) => (
         positionHandles.map((handle, index) => {
