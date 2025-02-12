@@ -1,4 +1,4 @@
-import { useState, DragEvent, useCallback, useRef } from 'react';
+import { useState, DragEvent, useCallback, useRef, useMemo } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -373,6 +373,15 @@ const NetworkTopology = () => {
     })));
   }, []);
 
+  // Memoize static objects
+  const memoizedNodeTypes = useMemo(() => nodeTypes, []);
+  const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
+  const memoizedNodeOrigin = useMemo(() => nodeOrigin, []);
+  const memoizedDefaultEdgeOptions = useMemo(() => ({
+    type: 'floating',
+    data: { edgeType: 'straight' },
+  }), []);
+
   if (isLoading) {
     return <div>Loading device configuration...</div>;
   }
@@ -409,18 +418,15 @@ const NetworkTopology = () => {
             onNodeDragStart={onNodeDragStart}
             onEdgeClick={onEdgeClick}
             onNodeContextMenu={onNodeContextMenu}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            nodeOrigin={nodeOrigin}
+            nodeTypes={memoizedNodeTypes}
+            edgeTypes={memoizedEdgeTypes}
+            nodeOrigin={memoizedNodeOrigin}
             connectionMode={ConnectionMode.Loose}
             fitView
             className="network-flow"
             minZoom={0.1}
             maxZoom={1.5}
-            defaultEdgeOptions={{
-              type: 'floating',
-              data: { edgeType: 'straight' },
-            }}
+            defaultEdgeOptions={memoizedDefaultEdgeOptions}
           >
             <Background variant={BackgroundVariant.Dots} />
             <Controls />
