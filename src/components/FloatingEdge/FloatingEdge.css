@@ -114,3 +114,18 @@
   cursor: pointer;
   stroke-width: 2.5;
 }
+
+/* Edge hover styles */
+.edge-hover {
+  stroke: #ff3366 !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 3px rgba(255, 51, 102, 0.4));
+  z-index: 1000;
+}
+
+.edge-label-hover {
+  z-index: 1000;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4));
+  background: white;
+  border-radius: 4px;
+}

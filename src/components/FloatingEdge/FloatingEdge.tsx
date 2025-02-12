@@ -1,6 +1,6 @@
 import { EdgeProps, useStore, getBezierPath, getStraightPath, getSmoothStepPath, Position, EdgeLabelRenderer } from '@xyflow/react';
 import { getEdgeParams } from '../../utils/edgeUtils';
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState, memo } from 'react';
 
 export type FloatingEdgeData = {
   edgeType?: 'default' | 'straight' | 'step' | 'smoothstep' | 'bezier';
@@ -80,6 +80,9 @@ function calculateParallelOffset(source: any, target: any, edgeId: string, edges
 }
 
 function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<FloatingEdgeData>) {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Fix: Use nodeLookup instead of nodeInternals
   const { sourceNode, targetNode, edges } = useStore((s) => ({
     sourceNode: s.nodeLookup.get(source),
     targetNode: s.nodeLookup.get(target),
@@ -174,10 +177,11 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
     ...style
   };
 
-  // Add visual feedback for selected state
+  // Add visual feedback for selected and hover states
   const edgeClasses = [
     'react-flow__edge-path',
     selected ? 'selected-edge' : '',
+    isHovered ? 'edge-hover' : ''
   ].filter(Boolean).join(' ');
 
   // Use interface labels if available, fall back to interface names
@@ -186,36 +190,42 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
 
   const labelStyle = {
     position: 'absolute',
-    background: '#e6f3ff',
-    padding: '1px 2px',
-    borderRadius: '4px',
-    fontSize: '8px',
+    transform: 'translate(-50%, -50%)',
+    fontSize: '9px',
     fontWeight: 500,
-    color: '#333',
-    border: '1px solid #ccc',
-    boxShadow: '0 0 2px rgba(0,0,0,0.1)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    padding: '1px 4px',  
+    borderRadius: '12px', 
     pointerEvents: 'all',
-    transform: 'translate(-50%, -50%)', // Center the label on the point
-    zIndex: 1000,
+    background: '#e6f3ff', 
+    color: '#333', 
+    border: '2px solid #2196f3', 
   } as const;
 
   return (
-    <>
+    <g 
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{ zIndex: isHovered ? 1000 : 0 }}
+    >
       <path
         id={id}
         className={edgeClasses}
         d={edgePath}
         style={defaultStyle}
       />
-      {data?.showLabels && (
+      {(data?.showLabels || isHovered) && (
         <EdgeLabelRenderer>
           <div
             style={{
               ...labelStyle,
               left: sourceLabelX,
               top: sourceLabelY,
+              zIndex: isHovered ? 1000 : 0,
+              filter: isHovered ? 'drop-shadow(0 0 2px rgba(0,0,0,0.2))' : 'none',
             }}
-            className="nodrag nopan"
+            className="nodrag nopan interface-label"
           >
             {sourceText}
           </div>
@@ -224,15 +234,17 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
               ...labelStyle,
               left: targetLabelX,
               top: targetLabelY,
+              zIndex: isHovered ? 1000 : 0,
+              filter: isHovered ? 'drop-shadow(0 0 2px rgba(0,0,0,0.2))' : 'none',
             }}
-            className="nodrag nopan"
+            className="nodrag nopan interface-label"
           >
             {targetText}
           </div>
         </EdgeLabelRenderer>
       )}
-    </>
+    </g>
   );
 }
 
-export default FloatingEdge;
+export default memo(FloatingEdge);
