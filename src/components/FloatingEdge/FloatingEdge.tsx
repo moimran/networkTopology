@@ -3,7 +3,7 @@ import { getEdgeParams } from '../../utils/edgeUtils';
 import { useRef, useCallback } from 'react';
 
 export type FloatingEdgeData = {
-  edgeType?: 'default' | 'straight' | 'step' | 'smoothstep' | 'angle-right' | 'angle-left' | 'angle-top' | 'angle-bottom';
+  edgeType?: 'default' | 'straight' | 'step' | 'smoothstep' | 'bezier';
   sourceInterface?: string;
   targetInterface?: string;
   sourceInterfaceLabel?: string;
@@ -79,89 +79,6 @@ function calculateParallelOffset(source: any, target: any, edgeId: string, edges
   };
 }
 
-/**
- * Calculate if a 90-degree angle is possible based on node positions
- */
-function canCreate90DegreeAngle(
-  sourceX: number,
-  sourceY: number,
-  targetX: number,
-  targetY: number,
-  direction: 'right' | 'left' | 'top' | 'bottom'
-): boolean {
-  const xDiff = Math.abs(targetX - sourceX);
-  const yDiff = Math.abs(targetY - sourceY);
-  const minDistance = 20; // Minimum distance required for a 90-degree angle
-
-  switch (direction) {
-    case 'right':
-      return targetX > sourceX + minDistance;
-    case 'left':
-      return targetX < sourceX - minDistance;
-    case 'top':
-      return targetY < sourceY - minDistance;
-    case 'bottom':
-      return targetY > sourceY + minDistance;
-  }
-}
-
-/**
- * Calculate the path for a 90-degree angle
- */
-function calculate90DegreePath(
-  sourceX: number,
-  sourceY: number,
-  targetX: number,
-  targetY: number,
-  direction: 'right' | 'left' | 'top' | 'bottom',
-  sourceOffset: { x: number; y: number },
-  targetOffset: { x: number; y: number }
-): string | null {
-  // Apply offsets to center points
-  const sx = sourceX + sourceOffset.x;
-  const sy = sourceY + sourceOffset.y;
-  const tx = targetX + targetOffset.x;
-  const ty = targetY + targetOffset.y;
-
-  // Check if we can create a 90-degree angle
-  if (!canCreate90DegreeAngle(sx, sy, tx, ty, direction)) {
-    return null;
-  }
-
-  const path = [];
-  path.push(`M ${sx} ${sy}`);
-
-  // Calculate the 90-degree angle path
-  switch (direction) {
-    case 'right': {
-      // Move right from source, then up/down to target
-      path.push(`L ${tx} ${sy}`);
-      path.push(`L ${tx} ${ty}`);
-      break;
-    }
-    case 'left': {
-      // Move left from source, then up/down to target
-      path.push(`L ${tx} ${sy}`);
-      path.push(`L ${tx} ${ty}`);
-      break;
-    }
-    case 'top': {
-      // Move up from source, then left/right to target
-      path.push(`L ${sx} ${ty}`);
-      path.push(`L ${tx} ${ty}`);
-      break;
-    }
-    case 'bottom': {
-      // Move down from source, then left/right to target
-      path.push(`L ${sx} ${ty}`);
-      path.push(`L ${tx} ${ty}`);
-      break;
-    }
-  }
-
-  return path.join(' ');
-}
-
 function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<FloatingEdgeData>) {
   const { sourceNode, targetNode, edges } = useStore((s) => ({
     sourceNode: s.nodeLookup.get(source),
@@ -179,18 +96,6 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
   // Calculate offset if there are multiple edges between these nodes
   const { sourceOffset, targetOffset } = calculateParallelOffset(sourceNode, targetNode, id, edges);
 
-  const warningShownRef = useRef<{ [key: string]: boolean }>({});
-  const showWarningOnce = useCallback((direction: string) => {
-    const warningKey = `${id}-${direction}`;
-    if (!warningShownRef.current[warningKey]) {
-      console.warn(
-        `Cannot create 90-degree ${direction} angle between nodes:`,
-        { source, target, direction }
-      );
-      warningShownRef.current[warningKey] = true;
-    }
-  }, [id, source, target]);
-
   // Get the appropriate path based on edge type
   let edgePath = '';
   let [sourceX, sourceY] = [sx + sourceOffset.x, sy + sourceOffset.y];
@@ -201,14 +106,17 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
   let sourceLabelX = 0, sourceLabelY = 0;
   let targetLabelX = 0, targetLabelY = 0;
 
-  switch (data?.edgeType) {
+  const pathParams = {
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+  };
+
+  // Apply edge type-specific path generation
+  switch (data?.edgeType || 'straight') {
     case 'straight': {
-      [edgePath] = getStraightPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
-      });
+      [edgePath] = getStraightPath(pathParams);
       // Calculate angle between nodes
       const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
       sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
@@ -217,15 +125,10 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
       targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
       break;
     }
-    case 'step':
-    case 'smoothstep': {
-      const borderRadius = data?.edgeType === 'step' ? 0 : 16;
+    case 'step': {
       [edgePath] = getSmoothStepPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
-        borderRadius,
+        ...pathParams,
+        borderRadius: 0,
       });
       // For step edges, position labels horizontally from nodes
       sourceLabelX = sourceX + LABEL_DISTANCE;
@@ -234,66 +137,31 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
       targetLabelY = targetY;
       break;
     }
-    case 'angle-right':
-    case 'angle-left':
-    case 'angle-top':
-    case 'angle-bottom': {
-      const direction = data.edgeType.split('-')[1] as 'right' | 'left' | 'top' | 'bottom';
-      const anglePath = calculate90DegreePath(sx, sy, tx, ty, direction, sourceOffset, targetOffset);
-      
-      if (anglePath) {
-        edgePath = anglePath;
-        // Position labels based on the angle direction
-        switch (direction) {
-          case 'right':
-            sourceLabelX = sourceX + LABEL_DISTANCE;
-            sourceLabelY = sourceY;
-            targetLabelX = targetX - LABEL_DISTANCE;
-            targetLabelY = targetY;
-            break;
-          case 'left':
-            sourceLabelX = sourceX - LABEL_DISTANCE;
-            sourceLabelY = sourceY;
-            targetLabelX = targetX + LABEL_DISTANCE;
-            targetLabelY = targetY;
-            break;
-          case 'top':
-            sourceLabelX = sourceX;
-            sourceLabelY = sourceY - LABEL_DISTANCE;
-            targetLabelX = targetX;
-            targetLabelY = targetY + LABEL_DISTANCE;
-            break;
-          case 'bottom':
-            sourceLabelX = sourceX;
-            sourceLabelY = sourceY + LABEL_DISTANCE;
-            targetLabelX = targetX;
-            targetLabelY = targetY - LABEL_DISTANCE;
-            break;
-        }
-      } else {
-        showWarningOnce(direction);
-        [edgePath] = getStraightPath({
-          sourceX,
-          sourceY,
-          targetX,
-          targetY,
-        });
-        const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
-        sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
-        sourceLabelY = sourceY + Math.sin(angle) * LABEL_DISTANCE;
-        targetLabelX = targetX - Math.cos(angle) * LABEL_DISTANCE;
-        targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
-      }
+    case 'smoothstep': {
+      [edgePath] = getSmoothStepPath({
+        ...pathParams,
+        borderRadius: 16,
+      });
+      // For step edges, position labels horizontally from nodes
+      sourceLabelX = sourceX + LABEL_DISTANCE;
+      sourceLabelY = sourceY;
+      targetLabelX = targetX - LABEL_DISTANCE;
+      targetLabelY = targetY;
+      break;
+    }
+    case 'bezier': {
+      [edgePath] = getBezierPath(pathParams);
+      // For bezier curves, use the same approach as straight lines
+      const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
+      sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
+      sourceLabelY = sourceY + Math.sin(angle) * LABEL_DISTANCE;
+      targetLabelX = targetX - Math.cos(angle) * LABEL_DISTANCE;
+      targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
       break;
     }
     default: {
-      [edgePath] = getBezierPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
-      });
-      // For bezier curves, use the same approach as straight lines
+      // Default to straight
+      [edgePath] = getStraightPath(pathParams);
       const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
       sourceLabelX = sourceX + Math.cos(angle) * LABEL_DISTANCE;
       sourceLabelY = sourceY + Math.sin(angle) * LABEL_DISTANCE;
@@ -307,6 +175,12 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
     stroke: '#b1b1b7',
     ...style
   };
+
+  // Add visual feedback for selected state
+  const edgeClasses = [
+    'react-flow__edge-path',
+    selected ? 'selected-edge' : '',
+  ].filter(Boolean).join(' ');
 
   // Use interface labels if available, fall back to interface names
   const sourceText = data?.sourceInterfaceLabel || data?.sourceInterface || 'E1/1';
@@ -331,7 +205,7 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
     <>
       <path
         id={id}
-        className="react-flow__edge-path"
+        className={edgeClasses}
         d={edgePath}
         style={defaultStyle}
       />

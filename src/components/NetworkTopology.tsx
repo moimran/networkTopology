@@ -142,20 +142,13 @@ const NetworkTopology = () => {
       // Prevent native context menu from showing
       event.preventDefault();
 
-      // Get the node's DOM element
-      const nodeElement = event.currentTarget as HTMLDivElement;
-      const nodeBounds = nodeElement.getBoundingClientRect();
-
-      // Position the modal overlapping slightly with the node's right side
-      const position = {
-        x: nodeBounds.right - 10, // Move modal more to the left to overlap
-        y: nodeBounds.bottom - 40, // Position near the top of the node
-      };
-
-      // Show our custom context menu
+      // Show interface modal at click position
       setInterfaceModal({
         show: true,
-        position,
+        position: {
+          x: event.clientX,
+          y: event.clientY,
+        },
         nodeId: node.id,
       });
     },
@@ -207,7 +200,7 @@ const NetworkTopology = () => {
         targetHandle: interfaceName,
         type: 'floating',
         data: {
-          edgeType: currentEdgeType,
+          edgeType: 'straight', // Set straight as the default edge type
           sourceInterface: pendingConnection.sourceInterface,
           targetInterface: interfaceName,
           // Find and store interface labels
@@ -234,7 +227,7 @@ const NetworkTopology = () => {
 
     // Hide the modal
     setInterfaceModal(prev => ({ ...prev, show: false }));
-  }, [interfaceModal.nodeId, pendingConnection, setEdges, currentEdgeType, showLabels]);
+  }, [interfaceModal.nodeId, pendingConnection, setEdges, showLabels]);
 
   const getNodeInterfaces = useCallback((nodeId: string | null) => {
     if (!nodeId) return [];
@@ -290,25 +283,27 @@ const NetworkTopology = () => {
    */
   const onEdgeClick = useCallback((event: React.MouseEvent, edge: Connection) => {
     event.stopPropagation();
+    event.preventDefault();
     setSelectedEdges(prev => {
       const isSelected = prev.includes(edge.id);
+      // Single click selects one edge, Shift+click adds to selection
       if (isSelected) {
-        return [];
+        return prev.filter(id => id !== edge.id); // Deselect if already selected
       } else if (event.shiftKey) {
-        return [...prev, edge.id];
+        return [...prev, edge.id]; // Add to selection with shift
       } else {
-        return [edge.id];
+        return [edge.id]; // Select only this edge
       }
     });
   }, []);
 
   /**
-   * Clear edge selection when clicking anywhere except toolbox
+   * Clear edge selection when clicking anywhere except toolbox and edges
    */
   const onPaneClick = useCallback((event: React.MouseEvent) => {
-    // Check if the click target is within the toolbox
     const isToolboxClick = (event.target as Element)?.closest('.toolbox-container');
-    if (!isToolboxClick) {
+    const isEdgeClick = (event.target as Element)?.closest('.react-flow__edge');
+    if (!isToolboxClick && !isEdgeClick) {
       setSelectedEdges([]);
     }
   }, []);
@@ -325,30 +320,39 @@ const NetworkTopology = () => {
   }, []);
 
   /**
-   * Handle edge type change for selected edges or set default type
+   * Handle edge type change for selected edges only
    */
   const onEdgeTypeChange = useCallback((type: string) => {
-    setCurrentEdgeType(type);
-    setEdges((eds) => {
-      if (selectedEdges.length === 0) {
-        // If no edges are selected, update all edges
-        return eds.map((edge) => ({
-          ...edge,
-          data: { ...edge.data, edgeType: type },
-        }));
-      } else {
-        // If edges are selected, only update selected edges
-        return eds.map((edge) => {
+    // Only update if there are selected edges
+    if (selectedEdges.length > 0) {
+      console.log('Changing edge type:', { selectedEdges, newType: type });
+      setEdges((eds) => {
+        const newEdges = eds.map((edge) => {
+          // Only change type for selected edges
           if (selectedEdges.includes(edge.id)) {
+            console.log('Updating edge:', { id: edge.id, oldType: edge.data?.edgeType, newType: type });
             return {
               ...edge,
-              data: { ...edge.data, edgeType: type },
+              type: 'floating',
+              data: {
+                ...edge.data,
+                edgeType: type,
+                // Preserve existing labels and interface data
+                sourceInterface: edge.data?.sourceInterface,
+                targetInterface: edge.data?.targetInterface,
+                sourceInterfaceLabel: edge.data?.sourceInterfaceLabel,
+                targetInterfaceLabel: edge.data?.targetInterfaceLabel,
+                showLabels: edge.data?.showLabels,
+              },
             };
           }
+          // Keep other edges unchanged
           return edge;
         });
-      }
-    });
+        console.log('Edge update complete');
+        return newEdges;
+      });
+    }
   }, [selectedEdges, setEdges]);
 
   // Handle click outside of nodes to clear interface selection
@@ -400,20 +404,22 @@ const NetworkTopology = () => {
             onInit={onInit}
             onDrop={onDrop}
             onDragOver={onDragOver}
-            onNodeContextMenu={onNodeContextMenu}
-            onEdgeClick={onEdgeClick}
             onPaneClick={onPaneClickOutside}
             onNodeClick={onNodeClick}
             onNodeDragStart={onNodeDragStart}
+            onEdgeClick={onEdgeClick}
+            onNodeContextMenu={onNodeContextMenu}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             nodeOrigin={nodeOrigin}
             connectionMode={ConnectionMode.Loose}
             fitView
+            className="network-flow"
+            minZoom={0.1}
+            maxZoom={1.5}
             defaultEdgeOptions={{
               type: 'floating',
-              animated: false,
-              className: 'selectable-edge'
+              data: { edgeType: 'straight' },
             }}
           >
             <Background variant={BackgroundVariant.Dots} />

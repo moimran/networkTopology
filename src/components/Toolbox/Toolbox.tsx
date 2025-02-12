@@ -10,14 +10,10 @@ interface ToolboxProps {
 }
 
 const edgeTypes = [
-  { value: 'default', label: 'Bezier', icon: '↝' },
   { value: 'straight', label: 'Straight', icon: '→' },
+  { value: 'bezier', label: 'Bezier', icon: '↝' },
   { value: 'step', label: 'Step', icon: '⌐' },
   { value: 'smoothstep', label: 'Smooth Step', icon: '⟿' },
-  { value: 'angle-right', label: 'Angle Right', icon: '⮤' },
-  { value: 'angle-left', label: 'Angle Left', icon: '⮥' },
-  { value: 'angle-top', label: 'Angle Top', icon: '⮧' },
-  { value: 'angle-bottom', label: 'Angle Bottom', icon: '⮦' },
 ];
 
 interface ToolboxSection {
@@ -36,6 +32,7 @@ interface ToolboxSection {
 export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [currentType, setCurrentType] = useState<string | null>(null);
   const { getEdges } = useReactFlow();
 
   // Reset expanded section when mouse leaves
@@ -45,60 +42,56 @@ export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProp
     }
   }, [isHovered]);
 
+  // Update current type when selection changes
+  useEffect(() => {
+    if (selectedEdges.length > 0) {
+      const edges = getEdges();
+      const selectedEdge = edges.find(edge => edge.id === selectedEdges[0]);
+      const newType = selectedEdge?.data?.edgeType || null;
+      console.log('Selection changed:', { selectedEdges, currentType: newType });
+      setCurrentType(newType);
+    } else {
+      setCurrentType(null);
+    }
+  }, [selectedEdges, getEdges]);
+
   const handleEdgeTypeChange = (type: string) => {
-    // Update local state immediately
-    const edges = getEdges();
-    const selectedEdgesData = edges.filter(edge => selectedEdges.includes(edge.id));
-    selectedEdgesData.forEach(edge => {
-      if (edge.data) {
-        edge.data.edgeType = type;
-      }
-    });
-    
-    // Call the parent handler
+    console.log('Edge type change:', { from: currentType, to: type });
+    setCurrentType(type);
     onEdgeTypeChange(type);
   };
+
+  const getButtonClass = (type: string) => {
+    const isActive = selectedEdges.length > 0 && type === currentType;
+    console.log('Button class:', { type, currentType, isActive });
+    return isActive ? 'active' : '';
+  };
+
+  const edgeTypeButtons = (
+    <div className="edge-type-buttons">
+      {edgeTypes.map((type) => (
+        <button
+          key={type.value}
+          className={getButtonClass(type.value)}
+          onClick={() => handleEdgeTypeChange(type.value)}
+          title={type.label}
+        >
+          {type.icon}
+        </button>
+      ))}
+    </div>
+  );
 
   const toggleSection = (sectionId: string) => {
     setExpandedSection(prev => prev === sectionId ? null : sectionId);
   };
-
-  // Get the edge type of the selected edges - Optimized to use local state
-  const getSelectedEdgeType = () => {
-    if (selectedEdges.length === 0) return null;
-    
-    const edges = getEdges();
-    const selectedEdgesData = edges.filter(edge => selectedEdges.includes(edge.id));
-    
-    if (selectedEdgesData.length === 0) return null;
-    
-    // If all selected edges have the same type, return that type
-    const firstType = selectedEdgesData[0]?.data?.edgeType;
-    return selectedEdgesData.every(edge => edge.data?.edgeType === firstType) ? firstType : null;
-  };
-
-  const selectedEdgeType = getSelectedEdgeType();
 
   const sections: ToolboxSection[] = [
     {
       id: 'edge-types',
       title: 'Edge Types',
       icon: <Share2 size={18} />,
-      content: (
-        <div className="edge-type-buttons">
-          {edgeTypes.map((type) => (
-            <button
-              key={type.value}
-              className={`edge-type-button ${selectedEdgeType === type.value ? 'selected' : ''}`}
-              onClick={() => handleEdgeTypeChange(type.value)}
-              title={type.label}
-            >
-              <span className="edge-type-icon">{type.icon}</span>
-              <span className="edge-type-label">{type.label}</span>
-            </button>
-          ))}
-        </div>
-      )
+      content: edgeTypeButtons
     },
     {
       id: 'device-settings',
