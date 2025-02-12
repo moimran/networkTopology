@@ -125,28 +125,26 @@ function FloatingEdge({ id, source, target, style, data, selected }: EdgeProps<F
       targetLabelY = targetY - Math.sin(angle) * LABEL_DISTANCE;
       break;
     }
-    case 'step': {
-      [edgePath] = getSmoothStepPath({
-        ...pathParams,
-        borderRadius: 0,
-      });
-      // For step edges, position labels horizontally from nodes
-      sourceLabelX = sourceX + LABEL_DISTANCE;
-      sourceLabelY = sourceY;
-      targetLabelX = targetX - LABEL_DISTANCE;
-      targetLabelY = targetY;
-      break;
-    }
+    case 'step':
     case 'smoothstep': {
+      const borderRadius = data?.edgeType === 'step' ? 0 : 16;
       [edgePath] = getSmoothStepPath({
         ...pathParams,
-        borderRadius: 16,
+        borderRadius,
       });
-      // For step edges, position labels horizontally from nodes
-      sourceLabelX = sourceX + LABEL_DISTANCE;
-      sourceLabelY = sourceY;
-      targetLabelX = targetX - LABEL_DISTANCE;
-      targetLabelY = targetY;
+      // For step edges, position labels based on vertical distance
+      const middlePoint = (targetY - sourceY) / 2;
+      const isConjusted = middlePoint < LABEL_DISTANCE + 15;
+
+      console.log({ isConjusted });
+      const delta = isConjusted ? middlePoint : LABEL_DISTANCE;
+
+      const isOpposite = targetY - sourceY < 20;
+
+      sourceLabelX = sourceX;
+      sourceLabelY = sourceY + (isOpposite ? 20 : delta);
+      targetLabelX = targetX;
+      targetLabelY = targetY - (isOpposite ? 20 : delta);
       break;
     }
     case 'bezier': {
