@@ -98,27 +98,27 @@
 /* Edge styling */
 .react-flow__edge-path {
   stroke: #b1b1b7;
-  stroke-width: 2;
+  stroke-width: 1;
   transition: stroke 0.2s, stroke-width 0.2s;
 }
 
 /* Selected edge */
 .selected-edge {
-  stroke: #ff3366 !important;
-  stroke-width: 3 !important;
+  stroke: #33ff77 !important;
+  stroke-width: 2 !important;
 }
 
 /* Hover state */
 .react-flow__edge:hover .react-flow__edge-path {
-  stroke: #ff3366;
+  stroke: #f84874;
   cursor: pointer;
-  stroke-width: 2.5;
+  stroke-width: 2;
 }
 
 /* Edge hover styles */
 .edge-hover {
   stroke: #ff3366 !important;
-  stroke-width: 3 !important;
+  stroke-width: 2 !important;
   filter: drop-shadow(0 0 3px rgba(255, 51, 102, 0.4));
   z-index: 1000;
 }
@@ -126,6 +126,6 @@
 .edge-label-hover {
   z-index: 1000;
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4));
-  background: white;
+  background: rgb(112, 109, 126);
   border-radius: 4px;
 }
