@@ -11,6 +11,7 @@ import {
   applyNodeChanges,
   Background,
   BackgroundVariant,
+  Edge,
   Connection,
   OnConnectStartParams,
 } from '@xyflow/react';
@@ -18,6 +19,7 @@ import {
 import { useDeviceNodes } from '../hooks/useDeviceNodes';
 import { useNetworkEdges } from '../hooks/useNetworkEdges';
 import { logger } from '../utils/logger';
+import { useEdgeStore, useSelectedEdges } from '../store/edgeStore';
 import NetworkNode from './NetworkNode/NetworkNode';
 import Sidebar from './Sidebar';
 import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
@@ -65,7 +67,6 @@ const NetworkTopology = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [currentEdgeType, setCurrentEdgeType] = useState('straight');
   const [showLabels, setShowLabels] = useState(false);
-  const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
   
   // Custom hooks for managing nodes and edges
   const { edges, onEdgesChange, setEdges } = useNetworkEdges();
@@ -88,6 +89,10 @@ const NetworkTopology = () => {
     sourceHandleId: string;
     sourceInterface: string;
   } | null>(null);
+
+  // Edge selection state from store
+  const { setSelectedEdges } = useEdgeStore();
+  const selectedEdges = useSelectedEdges();
 
   /**
    * Handle node changes (position, selection, etc.)
@@ -279,23 +284,20 @@ const NetworkTopology = () => {
   }, [edges, setEdges]);
 
   /**
-   * Handle edge selection
+   * Handle edge click events for selection
    */
-  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Connection) => {
+  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
     event.stopPropagation();
-    event.preventDefault();
-    setSelectedEdges(prev => {
-      const isSelected = prev.includes(edge.id);
-      // Single click selects one edge, Shift+click adds to selection
-      if (isSelected) {
-        return prev.filter(id => id !== edge.id); // Deselect if already selected
-      } else if (event.shiftKey) {
-        return [...prev, edge.id]; // Add to selection with shift
+    setSelectedEdges((prev) => {
+      if (event.ctrlKey || event.metaKey) {
+        return prev.includes(edge.id) 
+          ? prev.filter(id => id !== edge.id)  // Remove if already selected
+          : [...prev, edge.id];                // Add to selection
       } else {
         return [edge.id]; // Select only this edge
       }
     });
-  }, []);
+  }, [setSelectedEdges]);
 
   /**
    * Clear edge selection when clicking anywhere except toolbox and edges
@@ -306,18 +308,18 @@ const NetworkTopology = () => {
     if (!isToolboxClick && !isEdgeClick) {
       setSelectedEdges([]);
     }
-  }, []);
+  }, [setSelectedEdges]);
 
   /**
    * Clear edge selection when clicking on nodes or dragging
    */
   const onNodeClick = useCallback(() => {
     setSelectedEdges([]);
-  }, []);
+  }, [setSelectedEdges]);
 
   const onNodeDragStart = useCallback(() => {
     setSelectedEdges([]);
-  }, []);
+  }, [setSelectedEdges]);
 
   /**
    * Handle edge type change for selected edges only
