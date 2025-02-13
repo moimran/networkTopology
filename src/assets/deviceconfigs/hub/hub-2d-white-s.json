@@ -1,0 +1,46 @@
+{
+  "iconName": "hub-2d-white-s",
+  "deviceType": "hub",
+  "interfaces": [
+    {
+      "interfaceName": "Port0/0",
+      "interfaceLabel": "Po0/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Port0/1",
+      "interfaceLabel": "Po0/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Port1/0",
+      "interfaceLabel": "Po1/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Port1/1",
+      "interfaceLabel": "Po1/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Port2/0",
+      "interfaceLabel": "Po2/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Port2/1",
+      "interfaceLabel": "Po2/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Port3/0",
+      "interfaceLabel": "Po3/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Port3/1",
+      "interfaceLabel": "Po3/1",
+      "interfaceType": "ethernet"
+    }
+  ]
+}

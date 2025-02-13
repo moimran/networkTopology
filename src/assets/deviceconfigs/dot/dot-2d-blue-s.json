@@ -1,0 +1,11 @@
+{
+  "iconName": "dot-2d-blue-s",
+  "deviceType": "dot",
+  "interfaces": [
+    {
+      "interfaceName": "Connection0/0",
+      "interfaceLabel": "Co0/0",
+      "interfaceType": "virtual"
+    }
+  ]
+}

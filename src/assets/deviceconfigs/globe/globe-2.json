@@ -1,0 +1,26 @@
+{
+  "iconName": "globe-2",
+  "deviceType": "globe",
+  "interfaces": [
+    {
+      "interfaceName": "WAN0/0",
+      "interfaceLabel": "WA0/0",
+      "interfaceType": "wan"
+    },
+    {
+      "interfaceName": "WAN0/1",
+      "interfaceLabel": "WA0/1",
+      "interfaceType": "wan"
+    },
+    {
+      "interfaceName": "WAN1/0",
+      "interfaceLabel": "WA1/0",
+      "interfaceType": "wan"
+    },
+    {
+      "interfaceName": "WAN1/1",
+      "interfaceLabel": "WA1/1",
+      "interfaceType": "wan"
+    }
+  ]
+}

@@ -12,7 +12,7 @@ export const calculateHandlePositions = (interfaces: NetworkInterface[]) => {
   // Calculate angles for each interface
   const angleStep = (2 * Math.PI) / interfaceCount;
   
-  return interfaces.reduce((acc, iface, index) => {
+  return interfaces.map((iface, index) => {
     // Calculate angle for this interface
     const angle = index * angleStep;
     
@@ -28,9 +28,11 @@ export const calculateHandlePositions = (interfaces: NetworkInterface[]) => {
       position = Position.Top;
     }
     
-    acc[iface.interfaceName] = position;
-    return acc;
-  }, {} as Record<string, Position>);
+    return {
+      ...iface,
+      position
+    };
+  });
 };
 
 /**
@@ -45,7 +47,8 @@ export const loadDeviceConfig = async (configPath: string): Promise<DeviceConfig
     
     const config = await response.json();
     logger.debug('Loaded device config', {
-      deviceName: config.deviceName,
+      iconName: config.iconName,
+      deviceType: config.deviceType,
       interfaceCount: config.interfaces.length
     });
     

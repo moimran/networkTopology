@@ -1,0 +1,46 @@
+{
+  "iconName": "router-2d-fw-s",
+  "deviceType": "router",
+  "interfaces": [
+    {
+      "interfaceName": "GigabitEthernet0/0",
+      "interfaceLabel": "Gi0/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet0/1",
+      "interfaceLabel": "Gi0/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet1/0",
+      "interfaceLabel": "Gi1/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "FastEthernet1/1",
+      "interfaceLabel": "Fa1/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "FastEthernet2/0",
+      "interfaceLabel": "Fa2/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "FastEthernet2/1",
+      "interfaceLabel": "Fa2/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Serial3/0",
+      "interfaceLabel": "Se3/0",
+      "interfaceType": "serial"
+    },
+    {
+      "interfaceName": "Serial3/1",
+      "interfaceLabel": "Se3/1",
+      "interfaceType": "serial"
+    }
+  ]
+}

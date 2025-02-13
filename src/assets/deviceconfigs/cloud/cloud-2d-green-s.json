@@ -1,0 +1,46 @@
+{
+  "iconName": "cloud-2d-green-s",
+  "deviceType": "cloud",
+  "interfaces": [
+    {
+      "interfaceName": "VirtualInterface0/0",
+      "interfaceLabel": "Vi0/0",
+      "interfaceType": "virtual"
+    },
+    {
+      "interfaceName": "VirtualInterface0/1",
+      "interfaceLabel": "Vi0/1",
+      "interfaceType": "virtual"
+    },
+    {
+      "interfaceName": "VirtualInterface1/0",
+      "interfaceLabel": "Vi1/0",
+      "interfaceType": "virtual"
+    },
+    {
+      "interfaceName": "VirtualInterface1/1",
+      "interfaceLabel": "Vi1/1",
+      "interfaceType": "virtual"
+    },
+    {
+      "interfaceName": "VirtualInterface2/0",
+      "interfaceLabel": "Vi2/0",
+      "interfaceType": "virtual"
+    },
+    {
+      "interfaceName": "VirtualInterface2/1",
+      "interfaceLabel": "Vi2/1",
+      "interfaceType": "virtual"
+    },
+    {
+      "interfaceName": "VirtualInterface3/0",
+      "interfaceLabel": "Vi3/0",
+      "interfaceType": "virtual"
+    },
+    {
+      "interfaceName": "VirtualInterface3/1",
+      "interfaceLabel": "Vi3/1",
+      "interfaceType": "virtual"
+    }
+  ]
+}

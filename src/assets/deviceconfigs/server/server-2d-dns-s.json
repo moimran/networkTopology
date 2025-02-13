@@ -1,0 +1,26 @@
+{
+  "iconName": "server-2d-dns-s",
+  "deviceType": "server",
+  "interfaces": [
+    {
+      "interfaceName": "Ethernet0/0",
+      "interfaceLabel": "Et0/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Ethernet0/1",
+      "interfaceLabel": "Et0/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Management1/0",
+      "interfaceLabel": "Ma1/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Management1/1",
+      "interfaceLabel": "Ma1/1",
+      "interfaceType": "ethernet"
+    }
+  ]
+}

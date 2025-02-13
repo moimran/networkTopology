@@ -76,9 +76,16 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
   }, [id, handles, data]);
 
   return (
-    <div 
-      className="network-node"
-    >
+    <div className="network-node">
+      {/* Device Icon */}
+      {data.iconPath && (
+        <img 
+          src={data.iconPath} 
+          alt={data.config.deviceName}
+          className="device-icon"
+        />
+      )}
+      
       {/* Handles */}
       {Object.entries(handlesByPosition).map(([position, positionHandles]) => (
         positionHandles.map((handle, index) => {
@@ -99,19 +106,10 @@ const NetworkNode = ({ data, id }: NodeProps<DeviceNodeData>) => {
               isConnectable={true}
               title={`${handle.interface.interfaceName} (${handle.interface.interfaceType})`}
               data-interface={handle.interface.interfaceName}
-              data-type={handle.interface.interfaceType}
             />
           );
         })
       ))}
-      
-      {/* Icon and Label */}
-      <img 
-        src="/icons/router-2d-gen-dark-s.svg"
-        alt={data.config.deviceName}
-        className="device-icon"
-      />
-      <div className="node-label">{data.label || data.config.deviceName}</div>
     </div>
   );
 };

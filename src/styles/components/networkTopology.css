@@ -2,17 +2,17 @@
 
 /* NetworkTopology component styles */
 .network-topology {
-  display: flex;
-  flex-direction: row;
   width: 100vw;
   height: 100vh;
   position: relative;
+  display: flex;
 }
 
 .network-flow-wrapper {
   flex: 1;
   height: 100%;
   position: relative;
+  margin-right: 250px; /* Make space for the icon sidebar */
   cursor: grab;
 }
 
@@ -49,8 +49,16 @@
 
 /* ReactFlow customizations */
 .react-flow__node {
+  width: auto;
+  height: auto;
+  border-radius: 3px;
+  padding: 10px;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #eee;
   cursor: move;
-  border-radius: var(--node-border-radius);
   transition: box-shadow 0.2s ease;
 }
 
@@ -67,7 +75,36 @@
 }
 
 .react-flow__handle {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #784be8;
   cursor: crosshair;
+}
+
+.react-flow__handle-top {
+  top: -4px;
+}
+
+.react-flow__handle-right {
+  right: -4px;
+}
+
+.react-flow__handle-bottom {
+  bottom: -4px;
+}
+
+.react-flow__handle-left {
+  left: -4px;
+}
+
+.react-flow__node-custom {
+  font-size: 12px;
+  background: #eee;
+  border: 1px solid #555;
+  border-radius: 5px;
+  text-align: center;
+  padding: 10px;
 }
 
 .react-flow__edge {

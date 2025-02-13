@@ -3,20 +3,18 @@
  */
 export interface NetworkInterface {
   interfaceName: string;
+  interfaceLabel: string;
   interfaceType: string;
-  ipAddress?: string;
-  status?: string;
+  position?: Position;
 }
 
 /**
  * Interface representing a device configuration
  */
 export interface DeviceConfig {
-  deviceName: string;
+  iconName: string;
   deviceType: string;
   interfaces: NetworkInterface[];
-  status?: string;
-  location?: string;
 }
 
 /**
@@ -24,10 +22,13 @@ export interface DeviceConfig {
  */
 export interface DeviceNodeData {
   config: DeviceConfig;
-  label: string;
+  iconPath?: string;
   handles: Record<string, {
     type: 'source';
-    position: number;
+    position: Position;
     interface: NetworkInterface;
   }>;
+  selectedInterface?: string;
 }
+
+import { Position } from '@xyflow/react';

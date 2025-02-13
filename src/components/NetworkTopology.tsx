@@ -1,4 +1,4 @@
-import { useState, DragEvent, useCallback, useRef, useMemo } from 'react';
+import { useState, DragEvent, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -20,14 +20,22 @@ import { useDeviceNodes } from '../hooks/useDeviceNodes';
 import { useNetworkEdges } from '../hooks/useNetworkEdges';
 import { logger } from '../utils/logger';
 import { useEdgeStore, useSelectedEdges } from '../store/edgeStore';
+import { generateNodeId } from '../utils/nodeUtils';
+import { calculateHandlePositions } from '../utils/deviceUtils';
 import NetworkNode from './NetworkNode/NetworkNode';
 import Sidebar from './Sidebar';
 import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
 import FloatingEdge from './FloatingEdge/FloatingEdge';
 import Toolbox from './Toolbox/Toolbox';
 import Toolbar from './Toolbar/Toolbar';
+import IconSidebar from './IconSidebar/IconSidebar';
 import './FloatingEdge/FloatingEdge.css';
 import '../styles/components/networkTopology.css';
+
+// Asset paths configuration
+const ASSETS_BASE_PATH = '/src/assets';
+const ICONS_PATH = `${ASSETS_BASE_PATH}/icons`;
+const DEVICE_CONFIGS_PATH = `${ASSETS_BASE_PATH}/deviceconfigs`;
 
 /**
  * Custom node types configuration
@@ -51,7 +59,7 @@ const nodeOrigin: NodeOrigin = [0.5, 0.5];
 /**
  * Device configuration path
  */
-const DEVICE_CONFIG_PATH = '/deviceconfigs/router-2d-gen-dark-s.json';
+const DEVICE_CONFIG_PATH = `${DEVICE_CONFIGS_PATH}/router-2d-gen-dark-s.json`;
 
 /**
  * NetworkTopology Component
@@ -67,10 +75,98 @@ const NetworkTopology = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [currentEdgeType, setCurrentEdgeType] = useState('straight');
   const [showLabels, setShowLabels] = useState(false);
+  const [iconCategories, setIconCategories] = useState<Record<string, string[]>>({});
   
+  // Load icons on component mount
+  useEffect(() => {
+    const loadIcons = async () => {
+      try {
+        const categories = ['cloud', 'dot', 'globe', 'hub', 'pc', 'router', 'server', 'switch'];
+        const loadedCategories: Record<string, string[]> = {};
+
+        // Load all icons in each category
+        const icons = import.meta.glob('../assets/icons/**/*.{svg,png}', { eager: true });
+        
+        // Organize icons by category
+        for (const category of categories) {
+          const categoryIcons = Object.entries(icons)
+            .filter(([path]) => path.includes(`/icons/${category}/`))
+            .map(([path, module]: [string, any]) => module.default);
+
+          if (categoryIcons.length > 0) {
+            loadedCategories[category] = categoryIcons;
+            logger.debug(`Loaded icons for category ${category}:`, categoryIcons);
+          }
+        }
+
+        setIconCategories(loadedCategories);
+      } catch (error) {
+        logger.error('Error loading icons:', error);
+      }
+    };
+
+    loadIcons();
+  }, []);
+
   // Custom hooks for managing nodes and edges
   const { edges, onEdgesChange, setEdges } = useNetworkEdges();
   const { createDeviceNode, isLoading, error } = useDeviceNodes(DEVICE_CONFIG_PATH);
+
+  // Function to create a node with a specific config
+  const createNodeWithConfig = useCallback(async (position: XYPosition, iconPath: string) => {
+    try {
+      // Convert icon path to config path
+      const configPath = iconPath
+        .replace('/icons/', '/deviceconfigs/')
+        .replace(/\.(svg|png)$/, '.json');
+      
+      logger.debug('Loading device config', { configPath });
+      
+      const configResponse = await fetch(configPath);
+      if (!configResponse.ok) {
+        throw new Error(`Failed to load device config: ${configResponse.statusText}`);
+      }
+      const config = await configResponse.json();
+
+      const nodeId = generateNodeId();
+      const handlePositions = calculateHandlePositions(config.interfaces);
+
+      // Create handles for each interface
+      const handles = config.interfaces.reduce((acc, iface, index) => {
+        acc[iface.interfaceName] = {
+          type: 'source' as const,
+          position: handlePositions[index].position,
+          interface: iface
+        };
+        return acc;
+      }, {} as Record<string, any>);
+
+      const newNode: Node = {
+        id: nodeId,
+        type: 'networkNode',
+        position,
+        data: {
+          config,
+          iconPath,
+          handles,
+        },
+        draggable: true,
+        selectable: true,
+      };
+
+      logger.debug('Created new node', { nodeId, config: config.deviceType, interfaces: Object.keys(handles).length });
+      return newNode;
+    } catch (error) {
+      logger.error('Error creating node with config', error);
+      throw error;
+    }
+  }, []);
+
+  // Create a device node with custom config path
+  const createCustomDeviceNode = useCallback(async (configPath: string, position: XYPosition) => {
+    const { createDeviceNode } = useDeviceNodes(configPath);
+    return createDeviceNode(position);
+  }, []);
 
   // Interface select modal state
   const [interfaceModal, setInterfaceModal] = useState<{
@@ -118,28 +214,43 @@ const NetworkTopology = () => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  /**
-   * Handle node creation on drop
-   */
-  const onDrop = useCallback(async (event: DragEvent) => {
-    event.preventDefault();
+  const onDragStart = useCallback((event: DragEvent<HTMLDivElement>, iconPath: string) => {
+    logger.debug('Starting drag', { iconPath });
+    event.dataTransfer.setData('application/reactflow', 'networkNode');
+    event.dataTransfer.setData('icon', iconPath);
+    event.dataTransfer.effectAllowed = 'move';
+  }, []);
 
-    if (reactFlowInstance) {
+  const onDrop = useCallback(
+    async (event: DragEvent) => {
+      event.preventDefault();
+
       const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
-      if (reactFlowBounds) {
-        const position = reactFlowInstance.screenToFlowPosition({
-          x: event.clientX - reactFlowBounds.left,
-          y: event.clientY - reactFlowBounds.top,
-        });
+      const type = event.dataTransfer.getData('application/reactflow');
+      const iconPath = event.dataTransfer.getData('icon');
 
-        const newNode = await createDeviceNode(position);
-        if (newNode) {
-          logger.debug('Creating new device node', newNode);
-          setNodes(nds => [...nds, newNode]);
-        }
+      if (!type || !reactFlowBounds || !reactFlowInstance) {
+        logger.warn('Invalid drop event', { type, hasBounds: !!reactFlowBounds, hasInstance: !!reactFlowInstance });
+        return;
       }
-    }
-  }, [reactFlowInstance, createDeviceNode]);
+
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX - reactFlowBounds.left,
+        y: event.clientY - reactFlowBounds.top,
+      });
+
+      try {
+        const newNode = await createNodeWithConfig(position, iconPath);
+        if (newNode) {
+          setNodes((nds) => nds.concat(newNode));
+          logger.debug('Added new node to flow', { nodeId: newNode.id });
+        }
+      } catch (error) {
+        logger.error('Error handling node drop', error);
+      }
+    },
+    [reactFlowInstance, createNodeWithConfig]
+  );
 
   // Handle node interface selection
   const onNodeContextMenu = useCallback(
@@ -433,7 +544,11 @@ const NetworkTopology = () => {
             <Background variant={BackgroundVariant.Dots} />
             <Controls />
           </ReactFlow>
-
+          <Toolbox 
+            onEdgeTypeChange={onEdgeTypeChange}
+            selectedEdges={selectedEdges}
+          />
+          <IconSidebar iconCategories={iconCategories} onDragStart={onDragStart} />
           {/* Render interface select modal */}
           <InterfaceSelectModal
             show={interfaceModal.show}

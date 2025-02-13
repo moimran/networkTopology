@@ -1,0 +1,16 @@
+{
+  "iconName": "pc-2d-desktop-docker-s",
+  "deviceType": "pc",
+  "interfaces": [
+    {
+      "interfaceName": "Ethernet0/0",
+      "interfaceLabel": "Et0/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "Ethernet0/1",
+      "interfaceLabel": "Et0/1",
+      "interfaceType": "ethernet"
+    }
+  ]
+}

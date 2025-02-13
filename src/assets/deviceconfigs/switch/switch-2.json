@@ -1,0 +1,126 @@
+{
+  "iconName": "switch-2",
+  "deviceType": "switch",
+  "interfaces": [
+    {
+      "interfaceName": "GigabitEthernet0/0",
+      "interfaceLabel": "Gi0/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet0/1",
+      "interfaceLabel": "Gi0/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet1/0",
+      "interfaceLabel": "Gi1/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet1/1",
+      "interfaceLabel": "Gi1/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet2/0",
+      "interfaceLabel": "Gi2/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet2/1",
+      "interfaceLabel": "Gi2/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet3/0",
+      "interfaceLabel": "Gi3/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet3/1",
+      "interfaceLabel": "Gi3/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet4/0",
+      "interfaceLabel": "Gi4/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet4/1",
+      "interfaceLabel": "Gi4/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet5/0",
+      "interfaceLabel": "Gi5/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "GigabitEthernet5/1",
+      "interfaceLabel": "Gi5/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet6/0",
+      "interfaceLabel": "Te6/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet6/1",
+      "interfaceLabel": "Te6/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet7/0",
+      "interfaceLabel": "Te7/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet7/1",
+      "interfaceLabel": "Te7/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet8/0",
+      "interfaceLabel": "Te8/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet8/1",
+      "interfaceLabel": "Te8/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet9/0",
+      "interfaceLabel": "Te9/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet9/1",
+      "interfaceLabel": "Te9/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet10/0",
+      "interfaceLabel": "Te10/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet10/1",
+      "interfaceLabel": "Te10/1",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet11/0",
+      "interfaceLabel": "Te11/0",
+      "interfaceType": "ethernet"
+    },
+    {
+      "interfaceName": "TenGigabitEthernet11/1",
+      "interfaceLabel": "Te11/1",
+      "interfaceType": "ethernet"
+    }
+  ]
+}
