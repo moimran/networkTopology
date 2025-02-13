@@ -28,6 +28,7 @@ import FloatingEdge from './FloatingEdge/FloatingEdge';
 import Toolbox from './Toolbox/Toolbox';
 import Toolbar from './Toolbar/Toolbar';
 import IconSidebar from './IconSidebar/IconSidebar';
+import EdgeContextMenu from './EdgeContextMenu/EdgeContextMenu';
 import './FloatingEdge/FloatingEdge.css';
 import '../styles/components/networkTopology.css';
 
@@ -188,6 +189,17 @@ const NetworkTopology = () => {
   // Edge selection state from store
   const { setSelectedEdges } = useEdgeStore();
   const selectedEdges = useSelectedEdges();
+
+  // State for edge context menu
+  const [edgeContextMenu, setEdgeContextMenu] = useState<{
+    show: boolean;
+    position: { x: number; y: number };
+    edgeId: string | null;
+  }>({
+    show: false,
+    position: { x: 0, y: 0 },
+    edgeId: null,
+  });
 
   /**
    * Handle node changes (position, selection, etc.)
@@ -397,6 +409,39 @@ const NetworkTopology = () => {
     });
   }, [setEdges, setNodes]);
 
+  // Handle edge context menu
+  const onEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: Edge) => {
+      // Prevent default context menu
+      event.preventDefault();
+      event.stopPropagation();
+
+      // Show context menu at click position
+      setEdgeContextMenu({
+        show: true,
+        position: {
+          x: event.clientX,
+          y: event.clientY,
+        },
+        edgeId: edge.id,
+      });
+    },
+    []
+  );
+
+  // Handle edge deletion
+  const handleDeleteEdge = useCallback(() => {
+    if (edgeContextMenu.edgeId) {
+      // Delete the edge
+      setEdges(prevEdges => 
+        prevEdges.filter(edge => edge.id !== edgeContextMenu.edgeId)
+      );
+
+      // Close the context menu
+      setEdgeContextMenu(prev => ({ ...prev, show: false }));
+    }
+  }, [edgeContextMenu.edgeId, setEdges]);
+
   const handleToggleLabels = useCallback(() => {
     setShowLabels(prev => {
       const newShowLabels = !prev;
@@ -432,13 +477,31 @@ const NetworkTopology = () => {
   /**
    * Clear edge selection when clicking anywhere except toolbox and edges
    */
-  const onPaneClick = useCallback((event: React.MouseEvent) => {
-    const isToolboxClick = (event.target as Element)?.closest('.toolbox-container');
-    const isEdgeClick = (event.target as Element)?.closest('.react-flow__edge');
-    if (!isToolboxClick && !isEdgeClick) {
-      setSelectedEdges([]);
-    }
-  }, [setSelectedEdges]);
+  const onPaneClick = useCallback(() => {
+    // Close edge context menu
+    setEdgeContextMenu({
+      show: false,
+      position: { x: 0, y: 0 },
+      edgeId: null,
+    });
+
+    // Close node interface modal
+    setInterfaceModal({
+      show: false,
+      position: { x: 0, y: 0 },
+      nodeId: null,
+    });
+    setPendingConnection(null);
+    
+    // Clear selected interface from all nodes
+    setNodes(nodes => nodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        selectedInterface: undefined,
+      },
+    })));
+  }, []);
 
   /**
    * Clear edge selection when clicking on nodes or dragging
@@ -487,24 +550,6 @@ const NetworkTopology = () => {
     }
   }, [selectedEdges, setEdges]);
 
-  // Handle click outside of nodes to clear interface selection
-  const onPaneClickOutside = useCallback(() => {
-    setInterfaceModal({
-      show: false,
-      position: { x: 0, y: 0 },
-      nodeId: null,
-    });
-    setPendingConnection(null);
-    // Clear selected interface from all nodes
-    setNodes(nodes => nodes.map(node => ({
-      ...node,
-      data: {
-        ...node.data,
-        selectedInterface: undefined,
-      },
-    })));
-  }, []);
-
   // Memoize static objects
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
   const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
@@ -545,11 +590,12 @@ const NetworkTopology = () => {
             onInit={onInit}
             onDrop={onDrop}
             onDragOver={onDragOver}
-            onPaneClick={onPaneClickOutside}
+            onPaneClick={onPaneClick}
             onNodeClick={onNodeClick}
             onNodeDragStart={onNodeDragStart}
             onEdgeClick={onEdgeClick}
             onNodeContextMenu={onNodeContextMenu}
+            onEdgeContextMenu={onEdgeContextMenu}
             onNodesDelete={onNodesDelete}
             nodeTypes={memoizedNodeTypes}
             edgeTypes={memoizedEdgeTypes}
@@ -578,6 +624,12 @@ const NetworkTopology = () => {
             onSelect={onInterfaceSelect}
             onClose={() => setInterfaceModal(prev => ({ ...prev, show: false }))}
             onDelete={handleDeleteNode}
+          />
+          {/* Render edge context menu */}
+          <EdgeContextMenu
+            show={edgeContextMenu.show}
+            position={edgeContextMenu.position}
+            onDelete={handleDeleteEdge}
           />
         </div>
       </ReactFlowProvider>

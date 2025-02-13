@@ -63,7 +63,6 @@ export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProp
 
   const getButtonClass = (type: string) => {
     const isActive = selectedEdges.length > 0 && type === currentType;
-    console.log('Button class:', { type, currentType, isActive });
     return isActive ? 'active' : '';
   };
 

@@ -1,0 +1,39 @@
+@import '../../styles/contextMenu.css';
+
+.edge-context-menu {
+  composes: context-menu-base;
+  background: rgba(16, 46, 82, 0.95);
+  backdrop-filter: blur(40px);
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  min-width: 120px;
+  z-index: 1000;
+  color: #fff;
+}
+
+.edge-context-menu .delete-button {
+  composes: context-menu-button;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.edge-context-menu .delete-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.edge-context-menu .delete-button svg {
+  flex-shrink: 0;
+  stroke: currentColor;
+}

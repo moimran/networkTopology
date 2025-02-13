@@ -1,9 +1,5 @@
-@import '../../styles/contextMenu.css';
-
-.interface-select-modal {
-  composes: context-menu-base;
-  min-width: 200px;
-  position: fixed;
+/* Shared styles for context menus */
+.context-menu-base {
   background: rgba(16, 46, 82, 0.95);
   backdrop-filter: blur(40px);
   border-radius: 4px;
@@ -13,14 +9,7 @@
   color: #fff;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 12px;
-}
-
-.delete-button {
-  composes: context-menu-button;
+.context-menu-button {
   background: none;
   border: none;
   padding: 8px 12px;
@@ -35,16 +24,17 @@
   transition: background-color 0.2s;
 }
 
-.delete-button:hover {
+.context-menu-button:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.delete-button svg {
+.context-menu-button svg {
+  flex-shrink: 0;
   stroke: currentColor;
 }
 
-.interface-select {
-  composes: context-menu-select;
+/* Select styles */
+.context-menu-select {
   width: 100%;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.1);
@@ -55,17 +45,17 @@
   outline: none;
 }
 
-.interface-select:focus {
+.context-menu-select:focus {
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.interface-select option {
+.context-menu-select option {
   background: rgb(16, 46, 82);
   color: #fff;
   padding: 8px;
 }
 
-.interface-select option:disabled {
+.context-menu-select option:disabled {
   color: rgba(255, 255, 255, 0.5);
   font-style: italic;
   background-color: rgba(16, 46, 82, 0.8);
