@@ -23,7 +23,6 @@ import { useEdgeStore, useSelectedEdges } from '../store/edgeStore';
 import { generateNodeId } from '../utils/nodeUtils';
 import { calculateHandlePositions } from '../utils/deviceUtils';
 import NetworkNode from './NetworkNode/NetworkNode';
-import Sidebar from './Sidebar';
 import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
 import FloatingEdge from './FloatingEdge/FloatingEdge';
 import Toolbox from './Toolbox/Toolbox';
@@ -560,7 +559,6 @@ const NetworkTopology = () => {
             onDelete={handleDeleteNode}
           />
         </div>
-        <Sidebar />
       </ReactFlowProvider>
     </div>
   );
