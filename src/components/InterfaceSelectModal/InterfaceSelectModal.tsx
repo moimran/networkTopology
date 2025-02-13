@@ -32,6 +32,7 @@ const InterfaceSelectModal: React.FC<InterfaceSelectModalProps> = ({
   };
 
   const handleDelete = (event: React.MouseEvent) => {
+    event.preventDefault();
     event.stopPropagation();
     onDelete();
   };
@@ -50,6 +51,10 @@ const InterfaceSelectModal: React.FC<InterfaceSelectModalProps> = ({
         <button 
           className="delete-button"
           onClick={handleDelete}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
           title="Delete Node"
         >
           <svg 
@@ -62,6 +67,7 @@ const InterfaceSelectModal: React.FC<InterfaceSelectModalProps> = ({
           >
             <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14" />
           </svg>
+          Delete Node
         </button>
       </div>
       <select 

@@ -357,6 +357,7 @@ const NetworkTopology = () => {
       .filter((handle): handle is string => handle !== undefined);
   }, [edges]);
 
+  // Handle delete node action
   const handleDeleteNode = useCallback(() => {
     if (interfaceModal.nodeId) {
       const nodeToDelete = interfaceModal.nodeId;
@@ -376,6 +377,25 @@ const NetworkTopology = () => {
       logger.debug('Deleted node', { nodeId: nodeToDelete });
     }
   }, [interfaceModal.nodeId, edges, setEdges, setNodes]);
+
+  // Handle keyboard delete
+  const onNodesDelete = useCallback((deleted: Node[]) => {
+    deleted.forEach(node => {
+      if (node.id) {
+        // Delete connected edges
+        setEdges(prevEdges => 
+          prevEdges.filter(edge => 
+            edge.source !== node.id && edge.target !== node.id
+          )
+        );
+
+        // Delete the node
+        setNodes(prevNodes => 
+          prevNodes.filter(n => n.id !== node.id)
+        );
+      }
+    });
+  }, [setEdges, setNodes]);
 
   const handleToggleLabels = useCallback(() => {
     setShowLabels(prev => {
@@ -530,6 +550,7 @@ const NetworkTopology = () => {
             onNodeDragStart={onNodeDragStart}
             onEdgeClick={onEdgeClick}
             onNodeContextMenu={onNodeContextMenu}
+            onNodesDelete={onNodesDelete}
             nodeTypes={memoizedNodeTypes}
             edgeTypes={memoizedEdgeTypes}
             nodeOrigin={memoizedNodeOrigin}
