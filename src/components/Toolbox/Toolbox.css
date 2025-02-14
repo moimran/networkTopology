@@ -187,6 +187,76 @@
   margin: 10px 0;
 }
 
+/* Layout section styles */
+.layout-section {
+  margin-bottom: 16px;
+}
+
+.layout-section h4 {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.layout-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.layout-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.layout-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.layout-button:active {
+  transform: translateY(0);
+}
+
+.layout-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.layout-label {
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Settings item styles */
+.settings-item {
+  margin-bottom: 12px;
+}
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+}
+
+.settings-label svg {
+  opacity: 0.7;
+}
+
 /* Footer styles */
 .toolbox-footer {
   padding: 15px;
@@ -221,27 +291,6 @@
 }
 
 /* Settings styles */
-.settings-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.settings-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.settings-label svg {
-  color: #666;
-}
-
-.settings-label span {
-  flex-grow: 1;
-}
-
 .animated-switch {
   transition: background-color 0.3s ease;
 }

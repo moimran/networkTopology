@@ -75,6 +75,8 @@ const NetworkTopology = () => {
   const [currentEdgeType, setCurrentEdgeType] = useState('straight');
   const [showLabels, setShowLabels] = useState(false);
   const [iconCategories, setIconCategories] = useState<Record<string, string[]>>({});
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [currentLayout, setCurrentLayout] = useState('horizontal');
   
   // Load icons on component mount
   useEffect(() => {
@@ -549,6 +551,88 @@ const NetworkTopology = () => {
     }
   }, [selectedEdges, setEdges]);
 
+  const handleLayoutChange = useCallback((layout: string) => {
+    setCurrentLayout(layout);
+    if (!reactFlowInstance) return;
+
+    const currentNodes = reactFlowInstance.getNodes();
+    let updatedNodes = [...currentNodes];
+
+    switch (layout) {
+      case 'horizontal':
+        updatedNodes = arrangeNodesHorizontally(currentNodes);
+        break;
+      case 'vertical':
+        updatedNodes = arrangeNodesVertically(currentNodes);
+        break;
+      case 'radial':
+        updatedNodes = arrangeNodesRadially(currentNodes);
+        break;
+      case 'force':
+        updatedNodes = arrangeNodesForceDirected(currentNodes);
+        break;
+    }
+
+    setNodes(updatedNodes);
+  }, [reactFlowInstance]);
+
+  const arrangeNodesHorizontally = (nodes: Node[]) => {
+    return nodes.map((node, index) => ({
+      ...node,
+      position: {
+        x: index * 200,
+        y: 200
+      }
+    }));
+  };
+
+  const arrangeNodesVertically = (nodes: Node[]) => {
+    return nodes.map((node, index) => ({
+      ...node,
+      position: {
+        x: 200,
+        y: index * 200
+      }
+    }));
+  };
+
+  const arrangeNodesRadially = (nodes: Node[]) => {
+    const radius = 200;
+    const angleStep = (2 * Math.PI) / nodes.length;
+    
+    return nodes.map((node, index) => ({
+      ...node,
+      position: {
+        x: 300 + radius * Math.cos(index * angleStep),
+        y: 300 + radius * Math.sin(index * angleStep)
+      }
+    }));
+  };
+
+  const arrangeNodesForceDirected = (nodes: Node[]) => {
+    // Simple force-directed layout
+    const centerX = 300;
+    const centerY = 300;
+    const radius = 200;
+    
+    return nodes.map((node, index) => {
+      const angle = (index / nodes.length) * 2 * Math.PI;
+      const jitter = Math.random() * 50 - 25;
+      
+      return {
+        ...node,
+        position: {
+          x: centerX + (radius + jitter) * Math.cos(angle),
+          y: centerY + (radius + jitter) * Math.sin(angle)
+        }
+      };
+    });
+  };
+
+  const handleThemeToggle = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+  }, []);
+
   // Memoize static objects
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
   const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
@@ -577,6 +661,9 @@ const NetworkTopology = () => {
             selectedEdges={selectedEdges}
             showLabels={showLabels}
             onToggleLabels={handleToggleLabels}
+            onLayoutChange={handleLayoutChange}
+            onThemeToggle={handleThemeToggle}
+            isDarkMode={isDarkMode}
           />
           <ReactFlow
             nodes={nodes}
@@ -599,6 +686,7 @@ const NetworkTopology = () => {
             defaultEdgeOptions={memoizedDefaultEdgeOptions}
             connectionMode={ConnectionMode.Loose}
             fitView
+            className={isDarkMode ? 'dark-theme' : 'light-theme'}
           >
             <Background variant={BackgroundVariant.Dots} />
             <Controls />

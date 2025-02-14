@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Share2, Layout, ChevronDown, Eye } from "lucide-react";
+import { Settings, Share2, Layout, ChevronDown, Eye, Moon } from "lucide-react";
 import { Edge, useReactFlow } from '@xyflow/react';
 import './Toolbox.css';
 
@@ -52,6 +52,9 @@ interface ToolboxProps {
   selectedEdges: string[];
   showLabels: boolean;
   onToggleLabels: () => void;
+  onLayoutChange: (layout: string) => void;
+  onThemeToggle: () => void;
+  isDarkMode: boolean;
 }
 
 const edgeTypes = [
@@ -59,6 +62,13 @@ const edgeTypes = [
   { value: 'bezier', label: 'Bezier', icon: '↝' },
   { value: 'step', label: 'Step', icon: '⌐' },
   { value: 'smoothstep', label: 'Smooth Step', icon: '⟿' },
+];
+
+const layoutTypes = [
+  { value: 'horizontal', label: 'Horizontal Tree', icon: '⟷' },
+  { value: 'vertical', label: 'Vertical Tree', icon: '⟷' },
+  { value: 'radial', label: 'Radial', icon: '◎' },
+  { value: 'force', label: 'Force-Directed', icon: '⚡' },
 ];
 
 interface ToolboxSection {
@@ -78,7 +88,10 @@ export default function Toolbox({
   onEdgeTypeChange, 
   selectedEdges, 
   showLabels, 
-  onToggleLabels 
+  onToggleLabels,
+  onLayoutChange,
+  onThemeToggle,
+  isDarkMode
 }: ToolboxProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -111,6 +124,11 @@ export default function Toolbox({
     onEdgeTypeChange(type);
   };
 
+  const handleLayoutChange = (layout: string) => {
+    console.log('Layout change:', layout);
+    onLayoutChange(layout);
+  };
+
   const getButtonClass = (type: string) => {
     const isActive = selectedEdges.length > 0 && type === currentType;
     return isActive ? 'active' : '';
@@ -131,6 +149,22 @@ export default function Toolbox({
     </div>
   );
 
+  const layoutButtons = (
+    <div className="layout-buttons">
+      {layoutTypes.map((layout) => (
+        <button
+          key={layout.value}
+          className="layout-button"
+          onClick={() => handleLayoutChange(layout.value)}
+          title={layout.label}
+        >
+          <span className="layout-icon">{layout.icon}</span>
+          <span className="layout-label">{layout.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+
   const toggleSection = (sectionId: string) => {
     setExpandedSection(prev => prev === sectionId ? null : sectionId);
   };
@@ -141,6 +175,25 @@ export default function Toolbox({
       title: 'Edge Types',
       icon: <Share2 size={18} />,
       content: edgeTypeButtons
+    },
+    {
+      id: 'layout-options',
+      title: 'Layout Options',
+      icon: <Layout size={18} />,
+      content: (
+        <div className="layout-options">
+          <div className="layout-section">
+            <h4>Layout Type</h4>
+            {layoutButtons}
+          </div>
+          <div className="layout-section">
+            <h4>Layout Settings</h4>
+            <button className="toolbox-button">Auto Align</button>
+            <button className="toolbox-button">Snap to Grid</button>
+            <button className="toolbox-button">Reset Layout</button>
+          </div>
+        </div>
+      )
     },
     {
       id: 'device-settings',
@@ -158,21 +211,19 @@ export default function Toolbox({
               />
             </div>
           </div>
+          <div className="settings-item">
+            <div className="settings-label">
+              <Moon size={16} />
+              <span>Dark Mode</span>
+              <AnimatedSwitch 
+                isOn={isDarkMode} 
+                onToggle={onThemeToggle} 
+              />
+            </div>
+          </div>
           <button className="toolbox-button">Configure Device</button>
           <button className="toolbox-button">Device Templates</button>
           <button className="toolbox-button">Interface Settings</button>
-        </div>
-      )
-    },
-    {
-      id: 'layout-options',
-      title: 'Layout Options',
-      icon: <Layout size={18} />,
-      content: (
-        <div className="layout-options">
-          <button className="toolbox-button">Auto Layout</button>
-          <button className="toolbox-button">Grid Layout</button>
-          <button className="toolbox-button">Hierarchical</button>
         </div>
       )
     }
