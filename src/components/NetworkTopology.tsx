@@ -576,6 +576,8 @@ const NetworkTopology = () => {
             <Toolbox 
               onEdgeTypeChange={onEdgeTypeChange}
               selectedEdges={selectedEdges}
+              showLabels={showLabels}
+              onToggleLabels={handleToggleLabels}
             />
           </div>
           <Toolbar 
@@ -613,6 +615,8 @@ const NetworkTopology = () => {
           <Toolbox 
             onEdgeTypeChange={onEdgeTypeChange}
             selectedEdges={selectedEdges}
+            showLabels={showLabels}
+            onToggleLabels={handleToggleLabels}
           />
           <IconSidebar iconCategories={iconCategories} onDragStart={onDragStart} />
           {/* Render interface select modal */}

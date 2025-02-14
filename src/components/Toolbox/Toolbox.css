@@ -213,3 +213,37 @@
 .toolbox-content::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Settings styles */
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-label svg {
+  color: #666;
+}
+
+.settings-label span {
+  flex-grow: 1;
+}
+
+.animated-switch {
+  transition: background-color 0.3s ease;
+}
+
+.animated-switch[data-is-on="true"] {
+  background-color: #4CAF50 !important;
+}
+
+.animated-switch[data-is-on="false"] {
+  background-color: #cccccc !important;
+}

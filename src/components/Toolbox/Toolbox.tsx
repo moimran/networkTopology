@@ -1,12 +1,57 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Share2, Layout, ChevronDown } from "lucide-react";
+import { Settings, Share2, Layout, ChevronDown, Eye } from "lucide-react";
 import { Edge, useReactFlow } from '@xyflow/react';
 import './Toolbox.css';
+
+// Custom Animated Switch Component
+const AnimatedSwitch = ({ 
+  isOn, 
+  onToggle 
+}: { 
+  isOn: boolean, 
+  onToggle: () => void 
+}) => {
+  return (
+    <motion.div 
+      className="animated-switch"
+      data-is-on={isOn}
+      onClick={onToggle}
+      style={{
+        display: 'flex',
+        width: '40px',
+        height: '20px',
+        backgroundColor: isOn ? '#4CAF50' : '#cccccc',
+        borderRadius: '10px',
+        justifyContent: isOn ? 'flex-end' : 'flex-start',
+        alignItems: 'center',
+        cursor: 'pointer',
+        padding: '2px',
+      }}
+    >
+      <motion.div
+        layout
+        transition={{
+          type: "spring",
+          stiffness: 700,
+          damping: 30
+        }}
+        style={{
+          width: '16px',
+          height: '16px',
+          backgroundColor: 'white',
+          borderRadius: '50%',
+        }}
+      />
+    </motion.div>
+  );
+};
 
 interface ToolboxProps {
   onEdgeTypeChange: (type: string) => void;
   selectedEdges: string[];
+  showLabels: boolean;
+  onToggleLabels: () => void;
 }
 
 const edgeTypes = [
@@ -29,7 +74,12 @@ interface ToolboxSection {
  * A sliding panel that contains tools and settings for the network topology.
  * Uses framer-motion for smooth animations and hover interactions.
  */
-export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProps) {
+export default function Toolbox({ 
+  onEdgeTypeChange, 
+  selectedEdges, 
+  showLabels, 
+  onToggleLabels 
+}: ToolboxProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [currentType, setCurrentType] = useState<string | null>(null);
@@ -98,6 +148,16 @@ export default function Toolbox({ onEdgeTypeChange, selectedEdges }: ToolboxProp
       icon: <Settings size={18} />,
       content: (
         <div className="settings-options">
+          <div className="settings-item">
+            <div className="settings-label">
+              <Eye size={16} />
+              <span>Show Labels</span>
+              <AnimatedSwitch 
+                isOn={showLabels} 
+                onToggle={onToggleLabels} 
+              />
+            </div>
+          </div>
           <button className="toolbox-button">Configure Device</button>
           <button className="toolbox-button">Device Templates</button>
           <button className="toolbox-button">Interface Settings</button>
