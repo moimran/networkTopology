@@ -26,7 +26,6 @@ import NetworkNode from './NetworkNode/NetworkNode';
 import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
 import FloatingEdge from './FloatingEdge/FloatingEdge';
 import Toolbox from './Toolbox/Toolbox';
-import Toolbar from './Toolbar/Toolbar';
 import IconSidebar from './IconSidebar/IconSidebar';
 import EdgeContextMenu from './EdgeContextMenu/EdgeContextMenu';
 import './FloatingEdge/FloatingEdge.css';
@@ -569,18 +568,13 @@ const NetworkTopology = () => {
   }
 
   return (
-    <div className="network-topology">
+    <div className="network-topology h-screen w-screen">
       <ReactFlowProvider>
-        <div className="network-flow-wrapper" ref={reactFlowWrapper}>
-          <div className="absolute inset-0 flex items-center">
-            <Toolbox 
-              onEdgeTypeChange={onEdgeTypeChange}
-              selectedEdges={selectedEdges}
-              showLabels={showLabels}
-              onToggleLabels={handleToggleLabels}
-            />
-          </div>
-          <Toolbar 
+        <div className="network-flow-wrapper h-full w-full" ref={reactFlowWrapper}>
+          <IconSidebar iconCategories={iconCategories} onDragStart={onDragStart} />
+          <Toolbox 
+            onEdgeTypeChange={onEdgeTypeChange}
+            selectedEdges={selectedEdges}
             showLabels={showLabels}
             onToggleLabels={handleToggleLabels}
           />
@@ -602,24 +596,18 @@ const NetworkTopology = () => {
             nodeTypes={memoizedNodeTypes}
             edgeTypes={memoizedEdgeTypes}
             nodeOrigin={memoizedNodeOrigin}
+            defaultEdgeOptions={memoizedDefaultEdgeOptions}
             connectionMode={ConnectionMode.Loose}
             fitView
-            className="network-flow"
-            minZoom={0.1}
-            maxZoom={1.5}
-            defaultEdgeOptions={memoizedDefaultEdgeOptions}
           >
             <Background variant={BackgroundVariant.Dots} />
             <Controls />
           </ReactFlow>
-          <Toolbox 
-            onEdgeTypeChange={onEdgeTypeChange}
-            selectedEdges={selectedEdges}
-            showLabels={showLabels}
-            onToggleLabels={handleToggleLabels}
+          <EdgeContextMenu
+            show={edgeContextMenu.show}
+            position={edgeContextMenu.position}
+            onDelete={handleDeleteEdge}
           />
-          <IconSidebar iconCategories={iconCategories} onDragStart={onDragStart} />
-          {/* Render interface select modal */}
           <InterfaceSelectModal
             show={interfaceModal.show}
             interfaces={getNodeInterfaces(interfaceModal.nodeId)}
@@ -628,12 +616,6 @@ const NetworkTopology = () => {
             onSelect={onInterfaceSelect}
             onClose={() => setInterfaceModal(prev => ({ ...prev, show: false }))}
             onDelete={handleDeleteNode}
-          />
-          {/* Render edge context menu */}
-          <EdgeContextMenu
-            show={edgeContextMenu.show}
-            position={edgeContextMenu.position}
-            onDelete={handleDeleteEdge}
           />
         </div>
       </ReactFlowProvider>

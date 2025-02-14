@@ -181,10 +181,10 @@ export default function Toolbox({
   return (
     <motion.div 
       className="toolbox-container"
-      initial={{ x: -250 }}
+      initial={{ x: 210 }}
       animate={{ 
-        x: isHovered ? 0 : -240,
-        height: 'auto'
+        x: isHovered ? 0 : 210,
+        height: '100vh'
       }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
@@ -197,7 +197,7 @@ export default function Toolbox({
     >
       <motion.div 
         className="toolbox-panel"
-        animate={{ height: 'auto' }}
+        animate={{ height: '100%' }}
         transition={{ duration: 0.2 }}
       >
         <div className="toolbox-header">
