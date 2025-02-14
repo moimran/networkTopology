@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Cloud, 
+  Circle, 
+  Globe, 
+  Network, 
+  Monitor, 
+  Router, 
+  Server, 
+
+} from 'lucide-react';
 import './IconSidebar.css';
 
 interface IconSidebarProps {
@@ -22,11 +33,32 @@ const IconSidebar: React.FC<IconSidebarProps> = ({ iconCategories, onDragStart }
     return fileName.replace(/\.[^/.]+$/, '').split('-').join(' ');
   };
 
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'cloud':
+        return <Cloud size={18} />;
+      case 'dot':
+        return <Circle size={18} />;
+      case 'globe':
+        return <Globe size={18} />;
+      case 'hub':
+        return <Network size={18} />;
+      case 'pc':
+        return <Monitor size={18} />;
+      case 'router':
+        return <Router size={18} />;
+      case 'server':
+        return <Server size={18} />;
+      case 'switch':
+        return <Network size={18} />;
+    }
+  };
+
   return (
     <div className="icon-sidebar">
       <div className="icon-panel">
         <div className="icon-header">
-          <h2 className="icon-title">Network Devices</h2>
+          <h2 className="icon-title">N</h2>
         </div>
         <div className="icon-content">
           {Object.entries(iconCategories).map(([category, icons]) => (
@@ -36,7 +68,8 @@ const IconSidebar: React.FC<IconSidebarProps> = ({ iconCategories, onDragStart }
                 onClick={() => toggleCategory(category)}
               >
                 <span className="category-title">
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                  {getCategoryIcon(category)}
+                  <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
                 </span>
                 <span className={`category-arrow ${expandedCategories[category] ? 'expanded' : ''}`}>
                   {expandedCategories[category] ? (

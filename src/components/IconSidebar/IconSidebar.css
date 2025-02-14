@@ -75,6 +75,15 @@
   opacity: 0.9;
 }
 
+.category-title svg {
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.icon-category-header:hover .category-title svg {
+  opacity: 1;
+}
+
 .category-arrow {
   opacity: 0.7;
   transition: transform 0.2s;
