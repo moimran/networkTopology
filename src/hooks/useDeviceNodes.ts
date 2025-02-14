@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Node, XYPosition } from '@xyflow/react';
 import { DeviceConfig } from '../types/device';
 import { calculateHandlePositions, loadDeviceConfig } from '../utils/deviceUtils';
-import { generateNodeId } from '../config/nodeConfig';
+import { NodeIdGenerator } from '../utils/nodeUtils';
 import { logger } from '../utils/logger';
 
 /**
@@ -43,7 +43,7 @@ export const useDeviceNodes = (configPath: string) => {
       return null;
     }
 
-    const nodeId = generateNodeId();
+    const nodeId = NodeIdGenerator.generateNodeId();
 
     // Calculate handle positions based on interface count
     const handlePositions = calculateHandlePositions(deviceConfig.interfaces);

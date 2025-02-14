@@ -19,8 +19,8 @@ import {
 import { useDeviceNodes } from '../hooks/useDeviceNodes';
 import { useNetworkEdges } from '../hooks/useNetworkEdges';
 import { logger } from '../utils/logger';
+import { NodeIdGenerator } from '../utils/nodeUtils';
 import { useEdgeStore, useSelectedEdges } from '../store/edgeStore';
-import { generateNodeId } from '../utils/nodeUtils';
 import { calculateHandlePositions } from '../utils/deviceUtils';
 import NetworkNode from './NetworkNode/NetworkNode';
 import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
@@ -128,7 +128,7 @@ const NetworkTopology = () => {
       }
       const config = await configResponse.json();
 
-      const nodeId = generateNodeId();
+      const nodeId = NodeIdGenerator.generateNodeId();
       const handlePositions = calculateHandlePositions(config.interfaces);
 
       // Create handles for each interface
