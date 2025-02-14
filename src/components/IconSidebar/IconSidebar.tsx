@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { 
-  ChevronDown, 
-  ChevronUp, 
   Cloud, 
   Circle, 
   Globe, 
   Network, 
   Monitor, 
   Router, 
-  Server, 
-
+  Server,
+  X
 } from 'lucide-react';
 import './IconSidebar.css';
 
@@ -19,14 +17,7 @@ interface IconSidebarProps {
 }
 
 const IconSidebar: React.FC<IconSidebarProps> = ({ iconCategories, onDragStart }) => {
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
-
-  const toggleCategory = (category: string) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [category]: !prev[category]
-    }));
-  };
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const getIconName = (path: string) => {
     const fileName = path.split('/').pop() || '';
@@ -36,68 +27,67 @@ const IconSidebar: React.FC<IconSidebarProps> = ({ iconCategories, onDragStart }
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
       case 'cloud':
-        return <Cloud size={18} />;
+        return <Cloud size={24} />;
       case 'dot':
-        return <Circle size={18} />;
+        return <Circle size={24} />;
       case 'globe':
-        return <Globe size={18} />;
+        return <Globe size={24} />;
       case 'hub':
-        return <Network size={18} />;
+        return <Network size={24} />;
       case 'pc':
-        return <Monitor size={18} />;
+        return <Monitor size={24} />;
       case 'router':
-        return <Router size={18} />;
+        return <Router size={24} />;
       case 'server':
-        return <Server size={18} />;
+        return <Server size={24} />;
       case 'switch':
-        return <Network size={18} />;
+        return <Network size={24} />;
+      default:
+        return <Circle size={24} />;
     }
   };
 
   return (
     <div className="icon-sidebar">
-      <div className="icon-panel">
-        <div className="icon-header">
-          <h2 className="icon-title">N</h2>
-        </div>
-        <div className="icon-content">
-          {Object.entries(iconCategories).map(([category, icons]) => (
-            <div key={category} className="icon-category">
-              <button
-                className="icon-category-header"
-                onClick={() => toggleCategory(category)}
-              >
-                <span className="category-title">
-                  {getCategoryIcon(category)}
-                  <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                </span>
-                <span className={`category-arrow ${expandedCategories[category] ? 'expanded' : ''}`}>
-                  {expandedCategories[category] ? (
-                    <ChevronUp size={18} strokeWidth={2} />
-                  ) : (
-                    <ChevronDown size={18} strokeWidth={2} />
-                  )}
-                </span>
-              </button>
-              {expandedCategories[category] && (
-                <div className="icon-category-content">
-                  {icons.map((iconUrl) => (
-                    <div
-                      key={iconUrl}
-                      className="icon-item"
-                      draggable
-                      onDragStart={(e) => onDragStart(e, iconUrl)}
-                    >
-                      <img src={iconUrl} alt={getIconName(iconUrl)} />
-                      <span>{getIconName(iconUrl)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+      <div className="icon-strip">
+        {Object.keys(iconCategories).map((category) => (
+          <button
+            key={category}
+            className={`strip-button ${activeCategory === category ? 'active' : ''}`}
+            onClick={() => setActiveCategory(activeCategory === category ? null : category)}
+            title={category.charAt(0).toUpperCase() + category.slice(1)}
+          >
+            {getCategoryIcon(category)}
+          </button>
+        ))}
       </div>
+      
+      {activeCategory && (
+        <div className="sliding-panel">
+          <div className="panel-header">
+            <span className="panel-title">
+              {getCategoryIcon(activeCategory)}
+              {activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}
+            </span>
+            <button className="close-button" onClick={() => setActiveCategory(null)}>
+              <X size={18} />
+            </button>
+          </div>
+          <div className="panel-content">
+            {iconCategories[activeCategory].map((iconUrl) => (
+              <div
+                key={iconUrl}
+                className="icon-item"
+                draggable
+                onDragStart={(e) => onDragStart(e, iconUrl)}
+              >
+                <img src={iconUrl} alt={getIconName(iconUrl)} />
+                <span>{getIconName(iconUrl)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
