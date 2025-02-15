@@ -1,54 +1,79 @@
-![](https://github.com/xyflow/web/blob/main/assets/codesandbox-header-ts.png?raw=true)
+# Network Topology Visualization
 
-# React Flow starter (Vite + TS)
+A network topology visualization tool built with React Flow, allowing users to create, visualize, and manage network topologies interactively.
 
-We've put together this template to serve as a starting point for folks
-interested in React Flow. You can use this both as a base for your own React
-Flow applications, or for small experiments or bug reports.
+## Prerequisites
 
-**TypeScript not your thing?** We also have a vanilla JavaScript starter template,
-just for you!
+- Node.js (v18 or higher recommended)
+- npm (comes with Node.js)
 
-## Getting up and running
+## Project Structure
 
-You can get this template without forking/cloning the repo using `degit`:
+The project consists of two main parts:
+- Client: React-based frontend using React Flow for topology visualization
+- Server: Express.js backend for handling configuration and assets
 
+## Installation
+
+1. Clone the repository
+2. Install dependencies:
 ```bash
-npx degit xyflow/vite-react-flow-template your-app-name
+npm install
 ```
 
-The template contains mostly the minimum dependencies to get up and running, but
-also includes eslint and some additional rules to help you write React code that
-is less likely to run into issues:
+## Running the Application
 
+The application requires both the client and server to be running.
+
+### Start the Server
 ```bash
-npm install # or `pnpm install` or `yarn install`
+# Development mode with auto-reload
+npm run dev:server
+
+# Production mode
+npm run start:server
 ```
 
-Vite is a great development server and build tool that we recommend our users to
-use. You can start a development server with:
-
+### Start the Client
 ```bash
-npm run dev
+# Development mode
+npm run start:client
+
+# Build for production
+npm run build
 ```
 
-While the development server is running, changes you make to the code will be
-automatically reflected in the browser!
+The client will be available at `http://localhost:5173` and the server at `http://localhost:3000`.
 
-## Things to try:
+## Development
 
-- Create a new custom node inside `src/nodes/` (don't forget to export it from `src/nodes/index.ts`).
-- Change how things look by [overriding some of the built-in classes](https://reactflow.dev/learn/customization/theming#overriding-built-in-classes).
-- Add a layouting library to [position your nodes automatically](https://reactflow.dev/learn/layouting/layouting)
+- Client code is in the `src/` directory
+- Server code is in the `server/src/` directory
+- Network topology components are in `src/components/`
+- Server routes are defined in `server/src/routes/`
 
-## Resources
+## Building for Production
 
-Links:
+To create a production build:
 
-- [React Flow - Docs](https://reactflow.dev)
-- [React Flow - Discord](https://discord.com/invite/Bqt6xrs)
+```bash
+npm run build
+```
 
-Learn:
+The build output will be in the `dist/` directory.
 
-- [React Flow – Custom Nodes](https://reactflow.dev/learn/customization/custom-nodes)
-- [React Flow – Layouting](https://reactflow.dev/learn/layouting/layouting)
+## Features
+
+- Interactive network topology visualization
+- Drag-and-drop interface for creating network diagrams
+- Custom node types for network devices
+- Configuration management
+- Icon management for network devices
+
+## Technologies Used
+
+- React
+- React Flow
+- TypeScript
+- Express.js
+- Node.js
