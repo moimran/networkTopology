@@ -30,6 +30,7 @@ import IconSidebar from './IconSidebar/IconSidebar';
 import EdgeContextMenu from './EdgeContextMenu/EdgeContextMenu';
 import './FloatingEdge/FloatingEdge.css';
 import '../styles/components/networkTopology.css';
+import { saveConfig } from '../api/saveConfig';
 
 // Asset paths configuration
 const ASSETS_BASE_PATH = '/src/assets';
@@ -633,6 +634,56 @@ const NetworkTopology = () => {
     setIsDarkMode(prev => !prev);
   }, []);
 
+  /**
+   * Handles saving the diagram to the configs folder
+   */
+  const handleSave = useCallback(async () => {
+    if (!reactFlowInstance) return;
+
+    try {
+      // Get current nodes and edges
+      const nodes = reactFlowInstance.getNodes();
+      const edges = reactFlowInstance.getEdges();
+
+      // Create diagram data object
+      const diagramData = {
+        nodes: nodes.map(node => ({
+          ...node,
+          data: {
+            ...node.data,
+            // Ensure icon paths are relative to the project
+            icon: node.data.icon ? node.data.icon.replace(ASSETS_BASE_PATH, '') : '',
+            interfaces: node.data.interfaces ? node.data.interfaces.map(iface => ({
+              ...iface,
+              // Add any additional interface data needed
+            })) : [],
+            // Add any additional node data needed
+          }
+        })),
+        edges: edges.map(edge => ({
+          ...edge,
+          // Add any additional edge data needed
+        })),
+        // Add metadata
+        metadata: {
+          version: '1.0',
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString()
+        }
+      };
+
+      // Save using API
+      await saveConfig(diagramData);
+      logger.debug('Diagram saved successfully');
+
+      // Show success message
+      // toast.success('Network topology saved successfully');
+    } catch (error) {
+      logger.error('Failed to save diagram:', error);
+      // toast.error('Failed to save network topology');
+    }
+  }, [reactFlowInstance]);
+
   // Memoize static objects
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
   const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
@@ -664,6 +715,7 @@ const NetworkTopology = () => {
             onLayoutChange={handleLayoutChange}
             onThemeToggle={handleThemeToggle}
             isDarkMode={isDarkMode}
+            onSave={handleSave}
           />
           <ReactFlow
             nodes={nodes}

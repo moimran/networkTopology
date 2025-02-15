@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Share2, Layout, ChevronDown, Eye, Moon } from "lucide-react";
+import { Settings, Share2, Layout, ChevronDown, Eye, Moon, Save } from "lucide-react";
 import { Edge, useReactFlow } from '@xyflow/react';
 import './Toolbox.css';
 
@@ -55,6 +55,7 @@ interface ToolboxProps {
   onLayoutChange: (layout: string) => void;
   onThemeToggle: () => void;
   isDarkMode: boolean;
+  onSave: () => void;
 }
 
 const edgeTypes = [
@@ -91,7 +92,8 @@ export default function Toolbox({
   onToggleLabels,
   onLayoutChange,
   onThemeToggle,
-  isDarkMode
+  isDarkMode,
+  onSave
 }: ToolboxProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -251,11 +253,19 @@ export default function Toolbox({
         animate={{ height: '100%' }}
         transition={{ duration: 0.2 }}
       >
-        <div className="toolbox-header">
-          <h2 className="toolbox-title">Network Tools</h2>
-          <div className="toolbox-divider" />
+        {/* Save Button */}
+        <div className="save-button-container">
+          <button 
+            className="save-button" 
+            onClick={onSave}
+            title="Save Diagram"
+          >
+            <Save size={18} />
+            <span>Save Diagram</span>
+          </button>
         </div>
-        
+
+        {/* Sections */}
         <div className="toolbox-content">
           {sections.map((section) => (
             <div key={section.id} className="toolbox-section">

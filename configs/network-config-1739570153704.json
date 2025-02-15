@@ -1,0 +1,307 @@
+{
+  "nodes": [
+    {
+      "id": "node_1739570147315_61",
+      "type": "networkNode",
+      "position": {
+        "x": 720,
+        "y": 210
+      },
+      "data": {
+        "config": {
+          "iconName": "router-2d-gen-dark-s",
+          "deviceType": "router",
+          "interfaces": [
+            {
+              "interfaceName": "GigabitEthernet0/0",
+              "interfaceLabel": "Gi0/0",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "GigabitEthernet0/1",
+              "interfaceLabel": "Gi0/1",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "GigabitEthernet1/0",
+              "interfaceLabel": "Gi1/0",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "FastEthernet1/1",
+              "interfaceLabel": "Fa1/1",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "FastEthernet2/0",
+              "interfaceLabel": "Fa2/0",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "FastEthernet2/1",
+              "interfaceLabel": "Fa2/1",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "Serial3/0",
+              "interfaceLabel": "Se3/0",
+              "interfaceType": "serial"
+            },
+            {
+              "interfaceName": "Serial3/1",
+              "interfaceLabel": "Se3/1",
+              "interfaceType": "serial"
+            }
+          ]
+        },
+        "iconPath": "/src/assets/icons/router/router-2d-gen-dark-s.svg",
+        "handles": {
+          "GigabitEthernet0/0": {
+            "type": "source",
+            "position": "right",
+            "interface": {
+              "interfaceName": "GigabitEthernet0/0",
+              "interfaceLabel": "Gi0/0",
+              "interfaceType": "ethernet"
+            }
+          },
+          "GigabitEthernet0/1": {
+            "type": "source",
+            "position": "right",
+            "interface": {
+              "interfaceName": "GigabitEthernet0/1",
+              "interfaceLabel": "Gi0/1",
+              "interfaceType": "ethernet"
+            }
+          },
+          "GigabitEthernet1/0": {
+            "type": "source",
+            "position": "bottom",
+            "interface": {
+              "interfaceName": "GigabitEthernet1/0",
+              "interfaceLabel": "Gi1/0",
+              "interfaceType": "ethernet"
+            }
+          },
+          "FastEthernet1/1": {
+            "type": "source",
+            "position": "bottom",
+            "interface": {
+              "interfaceName": "FastEthernet1/1",
+              "interfaceLabel": "Fa1/1",
+              "interfaceType": "ethernet"
+            }
+          },
+          "FastEthernet2/0": {
+            "type": "source",
+            "position": "left",
+            "interface": {
+              "interfaceName": "FastEthernet2/0",
+              "interfaceLabel": "Fa2/0",
+              "interfaceType": "ethernet"
+            }
+          },
+          "FastEthernet2/1": {
+            "type": "source",
+            "position": "left",
+            "interface": {
+              "interfaceName": "FastEthernet2/1",
+              "interfaceLabel": "Fa2/1",
+              "interfaceType": "ethernet"
+            }
+          },
+          "Serial3/0": {
+            "type": "source",
+            "position": "top",
+            "interface": {
+              "interfaceName": "Serial3/0",
+              "interfaceLabel": "Se3/0",
+              "interfaceType": "serial"
+            }
+          },
+          "Serial3/1": {
+            "type": "source",
+            "position": "top",
+            "interface": {
+              "interfaceName": "Serial3/1",
+              "interfaceLabel": "Se3/1",
+              "interfaceType": "serial"
+            }
+          }
+        },
+        "selectedInterface": null,
+        "icon": "",
+        "interfaces": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "measured": {
+        "width": 48,
+        "height": 53
+      }
+    },
+    {
+      "id": "node_1739570148759_9605",
+      "type": "networkNode",
+      "position": {
+        "x": 450,
+        "y": 105
+      },
+      "data": {
+        "config": {
+          "iconName": "router-2d-gen-dark-s",
+          "deviceType": "router",
+          "interfaces": [
+            {
+              "interfaceName": "GigabitEthernet0/0",
+              "interfaceLabel": "Gi0/0",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "GigabitEthernet0/1",
+              "interfaceLabel": "Gi0/1",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "GigabitEthernet1/0",
+              "interfaceLabel": "Gi1/0",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "FastEthernet1/1",
+              "interfaceLabel": "Fa1/1",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "FastEthernet2/0",
+              "interfaceLabel": "Fa2/0",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "FastEthernet2/1",
+              "interfaceLabel": "Fa2/1",
+              "interfaceType": "ethernet"
+            },
+            {
+              "interfaceName": "Serial3/0",
+              "interfaceLabel": "Se3/0",
+              "interfaceType": "serial"
+            },
+            {
+              "interfaceName": "Serial3/1",
+              "interfaceLabel": "Se3/1",
+              "interfaceType": "serial"
+            }
+          ]
+        },
+        "iconPath": "/src/assets/icons/router/router-2d-gen-dark-s.svg",
+        "handles": {
+          "GigabitEthernet0/0": {
+            "type": "source",
+            "position": "right",
+            "interface": {
+              "interfaceName": "GigabitEthernet0/0",
+              "interfaceLabel": "Gi0/0",
+              "interfaceType": "ethernet"
+            }
+          },
+          "GigabitEthernet0/1": {
+            "type": "source",
+            "position": "right",
+            "interface": {
+              "interfaceName": "GigabitEthernet0/1",
+              "interfaceLabel": "Gi0/1",
+              "interfaceType": "ethernet"
+            }
+          },
+          "GigabitEthernet1/0": {
+            "type": "source",
+            "position": "bottom",
+            "interface": {
+              "interfaceName": "GigabitEthernet1/0",
+              "interfaceLabel": "Gi1/0",
+              "interfaceType": "ethernet"
+            }
+          },
+          "FastEthernet1/1": {
+            "type": "source",
+            "position": "bottom",
+            "interface": {
+              "interfaceName": "FastEthernet1/1",
+              "interfaceLabel": "Fa1/1",
+              "interfaceType": "ethernet"
+            }
+          },
+          "FastEthernet2/0": {
+            "type": "source",
+            "position": "left",
+            "interface": {
+              "interfaceName": "FastEthernet2/0",
+              "interfaceLabel": "Fa2/0",
+              "interfaceType": "ethernet"
+            }
+          },
+          "FastEthernet2/1": {
+            "type": "source",
+            "position": "left",
+            "interface": {
+              "interfaceName": "FastEthernet2/1",
+              "interfaceLabel": "Fa2/1",
+              "interfaceType": "ethernet"
+            }
+          },
+          "Serial3/0": {
+            "type": "source",
+            "position": "top",
+            "interface": {
+              "interfaceName": "Serial3/0",
+              "interfaceLabel": "Se3/0",
+              "interfaceType": "serial"
+            }
+          },
+          "Serial3/1": {
+            "type": "source",
+            "position": "top",
+            "interface": {
+              "interfaceName": "Serial3/1",
+              "interfaceLabel": "Se3/1",
+              "interfaceType": "serial"
+            }
+          }
+        },
+        "selectedInterface": null,
+        "icon": "",
+        "interfaces": []
+      },
+      "draggable": true,
+      "selectable": true,
+      "measured": {
+        "width": 48,
+        "height": 53
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "node_1739570148759_9605-GigabitEthernet0/0-node_1739570147315_61-GigabitEthernet0/0",
+      "source": "node_1739570148759_9605",
+      "sourceHandle": "GigabitEthernet0/0",
+      "target": "node_1739570147315_61",
+      "targetHandle": "GigabitEthernet0/0",
+      "type": "floating",
+      "data": {
+        "edgeType": "straight",
+        "sourceInterface": "GigabitEthernet0/0",
+        "targetInterface": "GigabitEthernet0/0",
+        "sourceInterfaceLabel": "Gi0/0",
+        "targetInterfaceLabel": "Gi0/0",
+        "showLabels": false
+      }
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "createdAt": "2025-02-14T21:55:57.099Z",
+    "lastModified": "2025-02-14T21:55:57.099Z"
+  }
+}

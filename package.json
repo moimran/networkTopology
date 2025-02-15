@@ -11,6 +11,8 @@
   "dependencies": {
     "@xyflow/react": "^12.4.2",
     "@xyflow/system": "^0.0.50",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
     "framer-motion": "^12.4.1",
     "lucide-react": "^0.475.0",
     "nanoid": "^5.0.9",
