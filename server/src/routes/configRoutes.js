@@ -25,11 +25,15 @@ router.get('/device/*', (req, res) => {
       return res.status(400).json({ error: 'Config path is required' });
     }
 
+    // Remove any leading /src/assets/deviceconfigs/ from the path
+    const cleanPath = configPath.replace(/^(\/src)?\/assets\/deviceconfigs\//, '');
+    
     // Convert to filesystem path
-    const fsPath = join(paths.assets.deviceConfigs, configPath);
+    const fsPath = join(paths.assets.deviceConfigs, cleanPath);
     
     console.log('Loading device config:', {
       requestPath: configPath,
+      cleanPath,
       fsPath,
       exists: fs.existsSync(fsPath)
     });

@@ -1,4 +1,4 @@
-import { useState, DragEvent, useCallback, useRef, useMemo, useEffect } from 'react';
+import React, { useState, DragEvent, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -14,6 +14,7 @@ import {
   Edge,
   Connection,
   OnConnectStartParams,
+  MarkerType
 } from '@xyflow/react';
 
 import { useDeviceNodes } from '../hooks/useDeviceNodes';
@@ -44,10 +45,26 @@ const nodeTypes = {
 };
 
 /**
- * Edge types configuration
+ * Custom edge types configuration
  */
 const edgeTypes = {
   floating: FloatingEdge,
+};
+
+/**
+ * Default edge options
+ */
+const defaultEdgeOptions = {
+  type: 'floating',
+  animated: false,
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    color: '#555',
+  },
+  style: {
+    strokeWidth: 2,
+    stroke: '#555',
+  },
 };
 
 /**
@@ -64,8 +81,7 @@ const nodeOrigin: NodeOrigin = [0.5, 0.5];
 const NetworkTopology = () => {
   // Reference to the ReactFlow instance
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  // ReactFlow instance state
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [currentEdgeType, setCurrentEdgeType] = useState('straight');
   const [showLabels, setShowLabels] = useState(false);
@@ -223,8 +239,15 @@ const NetworkTopology = () => {
    * Initialize ReactFlow instance
    */
   const onInit = useCallback((instance: ReactFlowInstance) => {
-    logger.debug('Initializing ReactFlow instance');
-    setReactFlowInstance(instance);
+    reactFlowInstance.current = instance;
+    logger.debug('ReactFlow initialized');
+    
+    // Load diagram from URL if config parameter exists
+    const urlParams = new URLSearchParams(window.location.search);
+    const configUrl = urlParams.get('config');
+    if (configUrl) {
+      loadDiagramFromUrl(instance);
+    }
   }, []);
 
   /**
@@ -250,12 +273,12 @@ const NetworkTopology = () => {
       const type = event.dataTransfer.getData('application/reactflow');
       const iconPath = event.dataTransfer.getData('icon');
 
-      if (!type || !reactFlowBounds || !reactFlowInstance) {
-        logger.warn('Invalid drop event', { type, hasBounds: !!reactFlowBounds, hasInstance: !!reactFlowInstance });
+      if (!type || !reactFlowBounds || !reactFlowInstance.current) {
+        logger.warn('Invalid drop event', { type, hasBounds: !!reactFlowBounds, hasInstance: !!reactFlowInstance.current });
         return;
       }
 
-      const position = reactFlowInstance.screenToFlowPosition({
+      const position = reactFlowInstance.current.screenToFlowPosition({
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
       });
@@ -562,9 +585,9 @@ const NetworkTopology = () => {
 
   const handleLayoutChange = useCallback((layout: string) => {
     setCurrentLayout(layout);
-    if (!reactFlowInstance) return;
+    if (!reactFlowInstance.current) return;
 
-    const currentNodes = reactFlowInstance.getNodes();
+    const currentNodes = reactFlowInstance.current.getNodes();
     let updatedNodes = [...currentNodes];
 
     switch (layout) {
@@ -642,16 +665,36 @@ const NetworkTopology = () => {
     setIsDarkMode(prev => !prev);
   }, []);
 
+  // Save the current diagram state
+  const saveDiagram = useCallback(async () => {
+    try {
+      if (!reactFlowInstance.current) {
+        throw new Error('Flow instance not initialized');
+      }
+
+      const flow = reactFlowInstance.current.toObject();
+      logger.debug('Saving diagram state', { 
+        nodeCount: flow.nodes.length,
+        edgeCount: flow.edges.length 
+      });
+
+      const filename = await saveConfig(flow);
+      logger.info('Diagram saved successfully', { filename });
+    } catch (error) {
+      logger.error('Failed to save diagram:', error);
+    }
+  }, [reactFlowInstance]);
+
   /**
    * Handles saving the diagram to the configs folder
    */
   const handleSave = useCallback(async () => {
-    if (!reactFlowInstance) return;
+    if (!reactFlowInstance.current) return;
 
     try {
       // Get current nodes and edges
-      const nodes = reactFlowInstance.getNodes();
-      const edges = reactFlowInstance.getEdges();
+      const nodes = reactFlowInstance.current.getNodes();
+      const edges = reactFlowInstance.current.getEdges();
 
       // Create diagram data object
       const diagramData = {
@@ -710,6 +753,37 @@ const NetworkTopology = () => {
     }
   }, [setNodes, setEdges]);
 
+  // Load diagram from URL if config parameter is present
+  const loadDiagramFromUrl = async (flowInstance?: ReactFlowInstance) => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const configUrl = urlParams.get('config');
+      
+      if (configUrl) {
+        const config = await restoreConfigFromUrl(configUrl);
+        logger.debug('Config loaded, setting nodes and edges', {
+          nodeCount: config.nodes?.length || 0,
+          edgeCount: config.edges?.length || 0
+        });
+        
+        // Set nodes and edges
+        if (config.nodes) setNodes(config.nodes);
+        if (config.edges) setEdges(config.edges);
+        
+        // Set viewport if provided and we have a flow instance
+        if (config.viewport && (flowInstance || reactFlowInstance.current)) {
+          const { x = 0, y = 0, zoom = 1 } = config.viewport;
+          const instance = flowInstance || reactFlowInstance.current;
+          instance.setViewport({ x, y, zoom });
+        }
+        
+        logger.info('Diagram loaded successfully');
+      }
+    } catch (error) {
+      logger.error('Failed to load diagram from URL:', error);
+    }
+  };
+
   // Parse URL parameters on component mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -723,10 +797,7 @@ const NetworkTopology = () => {
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
   const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
   const memoizedNodeOrigin = useMemo(() => nodeOrigin, []);
-  const memoizedDefaultEdgeOptions = useMemo(() => ({
-    type: 'floating',
-    data: { edgeType: 'straight' },
-  }), []);
+  const memoizedDefaultEdgeOptions = useMemo(() => defaultEdgeOptions, []);
 
   // Function to load device config when needed
   const loadNodeConfig = useCallback(async (node: Node) => {
@@ -759,6 +830,36 @@ const NetworkTopology = () => {
     });
   }, [nodes, loadNodeConfig]);
 
+  // Handle connection creation
+  const onConnect = useCallback((params: Connection) => {
+    const { source, sourceHandle, target, targetHandle } = params;
+    if (!source || !target) return;
+
+    const newEdge: Edge = {
+      id: `${source}-${sourceHandle}-${target}-${targetHandle}`,
+      source,
+      sourceHandle,
+      target,
+      targetHandle,
+      type: 'floating',
+      data: {
+        edgeType: 'straight',
+        sourceInterface: sourceHandle,
+        targetInterface: targetHandle
+      },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: '#555',
+      },
+      style: {
+        strokeWidth: 2,
+        stroke: '#555',
+      }
+    };
+
+    setEdges(prev => [...prev, newEdge]);
+  }, [setEdges]);
+
   if (isLoading) {
     return <div>Loading device configuration...</div>;
   }
@@ -781,7 +882,7 @@ const NetworkTopology = () => {
             onLayoutChange={handleLayoutChange}
             onThemeToggle={handleThemeToggle}
             isDarkMode={isDarkMode}
-            onSave={handleSave}
+            onSave={saveDiagram}
           />
           <ReactFlow
             nodes={nodes}
@@ -798,6 +899,7 @@ const NetworkTopology = () => {
             onNodeContextMenu={onNodeContextMenu}
             onEdgeContextMenu={onEdgeContextMenu}
             onNodesDelete={onNodesDelete}
+            onConnect={onConnect}
             nodeTypes={memoizedNodeTypes}
             edgeTypes={memoizedEdgeTypes}
             nodeOrigin={memoizedNodeOrigin}
