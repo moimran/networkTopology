@@ -31,11 +31,10 @@ import EdgeContextMenu from './EdgeContextMenu/EdgeContextMenu';
 import './FloatingEdge/FloatingEdge.css';
 import '../styles/components/networkTopology.css';
 import { saveConfig } from '../api/saveConfig';
-
-// Asset paths configuration
-const ASSETS_BASE_PATH = '/src/assets';
-const ICONS_PATH = `${ASSETS_BASE_PATH}/icons`;
-const DEVICE_CONFIGS_PATH = `${ASSETS_BASE_PATH}/deviceconfigs`;
+import { loadDeviceConfig, restoreConfigFromUrl } from '../api/loadConfig';
+import sharp from 'sharp';
+import { getIconConfigPath } from '../api/iconMetadata';
+import { ICONS_PATH, DEVICE_CONFIGS_PATH, API_BASE_URL } from '../config/paths';
 
 /**
  * Custom node types configuration
@@ -57,11 +56,6 @@ const edgeTypes = {
 const nodeOrigin: NodeOrigin = [0.5, 0.5];
 
 /**
- * Device configuration path
- */
-const DEVICE_CONFIG_PATH = `${DEVICE_CONFIGS_PATH}/router-2d-gen-dark-s.json`;
-
-/**
  * NetworkTopology Component
  * 
  * Main component for the network topology visualization.
@@ -78,6 +72,7 @@ const NetworkTopology = () => {
   const [iconCategories, setIconCategories] = useState<Record<string, string[]>>({});
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [currentLayout, setCurrentLayout] = useState('horizontal');
+  const [isLoading, setIsLoading] = useState(false);
   
   // Load icons on component mount
   useEffect(() => {
@@ -112,23 +107,32 @@ const NetworkTopology = () => {
 
   // Custom hooks for managing nodes and edges
   const { edges, onEdgesChange, setEdges } = useNetworkEdges();
-  const { createDeviceNode, isLoading, error } = useDeviceNodes(DEVICE_CONFIG_PATH);
+  const { createDeviceNode, error } = useDeviceNodes(`${DEVICE_CONFIGS_PATH}/router-2d-gen-dark-s.json`);
 
   // Function to create a node with a specific config
   const createNodeWithConfig = useCallback(async (position: XYPosition, iconPath: string) => {
     try {
-      // Convert icon path to config path
-      const configPath = iconPath
-        .replace('/icons/', '/deviceconfigs/')
-        .replace(/\.(svg|png)$/, '.json');
+      logger.debug('Creating node with icon', { iconPath });
       
-      logger.debug('Loading device config', { configPath });
+      // Get config path using the metadata API
+      const configPath = await getIconConfigPath(iconPath);
+      logger.debug('Got config path from metadata', { configPath });
       
-      const configResponse = await fetch(configPath);
-      if (!configResponse.ok) {
-        throw new Error(`Failed to load device config: ${configResponse.statusText}`);
+      // Extract the relative path part (after deviceconfigs/)
+      const relativePath = configPath.split('/deviceconfigs/')[1];
+      if (!relativePath) {
+        throw new Error('Invalid config path format');
       }
-      const config = await configResponse.json();
+
+      // Load the device configuration from the API
+      const response = await fetch(`${API_BASE_URL}/api/config/device/${relativePath}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to load device config: ${error}`);
+      }
+      
+      const config = await response.json();
+      logger.debug('Loaded device config', { config });
 
       const nodeId = NodeIdGenerator.generateNodeId();
       const handlePositions = calculateHandlePositions(config.interfaces);
@@ -156,7 +160,11 @@ const NetworkTopology = () => {
         selectable: true,
       };
 
-      logger.debug('Created new node', { nodeId, config: config.deviceType, interfaces: Object.keys(handles).length });
+      logger.debug('Created new node', { 
+        nodeId, 
+        deviceType: config.deviceType, 
+        interfaceCount: Object.keys(handles).length 
+      });
       return newNode;
     } catch (error) {
       logger.error('Error creating node with config', error);
@@ -652,7 +660,7 @@ const NetworkTopology = () => {
           data: {
             ...node.data,
             // Ensure icon paths are relative to the project
-            icon: node.data.icon ? node.data.icon.replace(ASSETS_BASE_PATH, '') : '',
+            icon: node.data.icon ? node.data.icon.replace(ICONS_PATH, '') : '',
             interfaces: node.data.interfaces ? node.data.interfaces.map(iface => ({
               ...iface,
               // Add any additional interface data needed
@@ -684,6 +692,33 @@ const NetworkTopology = () => {
     }
   }, [reactFlowInstance]);
 
+  // Function to restore config from URL
+  const restoreConfig = useCallback(async (url: string) => {
+    try {
+      setIsLoading(true);
+      const restoredConfig = await restoreConfigFromUrl(url);
+      
+      // Update nodes and edges with restored config
+      setNodes(restoredConfig.nodes || []);
+      setEdges(restoredConfig.edges || []);
+      
+      console.log('Config restored successfully');
+    } catch (error) {
+      console.error('Error restoring config:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setNodes, setEdges]);
+
+  // Parse URL parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const restoreUrl = urlParams.get('restore');
+    if (restoreUrl) {
+      restoreConfig(restoreUrl);
+    }
+  }, [restoreConfig]);
+
   // Memoize static objects
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
   const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
@@ -692,6 +727,37 @@ const NetworkTopology = () => {
     type: 'floating',
     data: { edgeType: 'straight' },
   }), []);
+
+  // Function to load device config when needed
+  const loadNodeConfig = useCallback(async (node: Node) => {
+    if (node.data.configPath && !node.data.config) {
+      try {
+        const config = await loadDeviceConfig(node.data.configPath);
+        // Update node with loaded config
+        const updatedNode = {
+          ...node,
+          data: {
+            ...node.data,
+            config
+          }
+        };
+        setNodes((nds) => 
+          nds.map((n) => (n.id === node.id ? updatedNode : n))
+        );
+      } catch (error) {
+        console.error(`Error loading config for node ${node.id}:`, error);
+      }
+    }
+  }, [setNodes]);
+
+  // Load configs for nodes when they are selected or connected
+  useEffect(() => {
+    nodes.forEach((node) => {
+      if (node.selected) {
+        loadNodeConfig(node);
+      }
+    });
+  }, [nodes, loadNodeConfig]);
 
   if (isLoading) {
     return <div>Loading device configuration...</div>;
