@@ -12,11 +12,12 @@ import {
 import './IconSidebar.css';
 
 interface IconSidebarProps {
-  iconCategories: Record<string, string[]>;
+  categories: Record<string, string[]>;
   onDragStart: (event: React.DragEvent<HTMLDivElement>, iconPath: string) => void;
+  isDarkMode: boolean;
 }
 
-const IconSidebar: React.FC<IconSidebarProps> = ({ iconCategories, onDragStart }) => {
+const IconSidebar: React.FC<IconSidebarProps> = ({ categories = {}, onDragStart, isDarkMode }) => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const getIconName = (path: string) => {
@@ -47,10 +48,16 @@ const IconSidebar: React.FC<IconSidebarProps> = ({ iconCategories, onDragStart }
     }
   };
 
+  const categoryKeys = Object.keys(categories);
+
+  if (categoryKeys.length === 0) {
+    return null; // Or return a loading state/placeholder
+  }
+
   return (
-    <div className="icon-sidebar">
+    <div className={`icon-sidebar ${isDarkMode ? 'dark' : 'light'}`}>
       <div className="icon-strip">
-        {Object.keys(iconCategories).map((category) => (
+        {categoryKeys.map((category) => (
           <button
             key={category}
             className={`strip-button ${activeCategory === category ? 'active' : ''}`}
@@ -62,7 +69,7 @@ const IconSidebar: React.FC<IconSidebarProps> = ({ iconCategories, onDragStart }
         ))}
       </div>
       
-      {activeCategory && (
+      {activeCategory && categories[activeCategory] && (
         <div className="sliding-panel">
           <div className="panel-header">
             <span className="panel-title">
@@ -74,7 +81,7 @@ const IconSidebar: React.FC<IconSidebarProps> = ({ iconCategories, onDragStart }
             </button>
           </div>
           <div className="panel-content">
-            {iconCategories[activeCategory].map((iconUrl) => (
+            {categories[activeCategory].map((iconUrl) => (
               <div
                 key={iconUrl}
                 className="icon-item"

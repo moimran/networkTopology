@@ -48,14 +48,17 @@ const AnimatedSwitch = ({
 };
 
 interface ToolboxProps {
+  currentEdgeType: string;
   onEdgeTypeChange: (type: string) => void;
-  selectedEdges: string[];
   showLabels: boolean;
   onToggleLabels: () => void;
-  onLayoutChange: (layout: string) => void;
-  onThemeToggle: () => void;
   isDarkMode: boolean;
+  onToggleDarkMode: () => void;
+  currentLayout: string;
+  onLayoutChange: (layout: string) => void;
+  selectedEdges: string[];
   onSave: () => void;
+  isLoading: boolean;
 }
 
 const edgeTypes = [
@@ -86,19 +89,20 @@ interface ToolboxSection {
  * Uses framer-motion for smooth animations and hover interactions.
  */
 export default function Toolbox({ 
+  currentEdgeType,
   onEdgeTypeChange, 
-  selectedEdges, 
+  selectedEdges = [], 
   showLabels, 
   onToggleLabels,
   onLayoutChange,
-  onThemeToggle,
   isDarkMode,
-  onSave
+  onToggleDarkMode,
+  currentLayout,
+  onSave,
+  isLoading
 }: ToolboxProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [currentType, setCurrentType] = useState<string | null>(null);
-  const { getEdges } = useReactFlow();
 
   // Reset expanded section when mouse leaves
   useEffect(() => {
@@ -107,32 +111,16 @@ export default function Toolbox({
     }
   }, [isHovered]);
 
-  // Update current type when selection changes
-  useEffect(() => {
-    if (selectedEdges.length > 0) {
-      const edges = getEdges();
-      const selectedEdge = edges.find(edge => edge.id === selectedEdges[0]);
-      const newType = selectedEdge?.data?.edgeType || null;
-      console.log('Selection changed:', { selectedEdges, currentType: newType });
-      setCurrentType(newType);
-    } else {
-      setCurrentType(null);
-    }
-  }, [selectedEdges, getEdges]);
-
   const handleEdgeTypeChange = (type: string) => {
-    console.log('Edge type change:', { from: currentType, to: type });
-    setCurrentType(type);
     onEdgeTypeChange(type);
   };
 
   const handleLayoutChange = (layout: string) => {
-    console.log('Layout change:', layout);
     onLayoutChange(layout);
   };
 
   const getButtonClass = (type: string) => {
-    const isActive = selectedEdges.length > 0 && type === currentType;
+    const isActive = selectedEdges.length > 0 && type === currentEdgeType;
     return isActive ? 'active' : '';
   };
 
@@ -144,6 +132,7 @@ export default function Toolbox({
           className={getButtonClass(type.value)}
           onClick={() => handleEdgeTypeChange(type.value)}
           title={type.label}
+          disabled={selectedEdges.length === 0}
         >
           {type.icon}
         </button>
@@ -156,7 +145,7 @@ export default function Toolbox({
       {layoutTypes.map((layout) => (
         <button
           key={layout.value}
-          className="layout-button"
+          className={`layout-button ${layout.value === currentLayout ? 'active' : ''}`}
           onClick={() => handleLayoutChange(layout.value)}
           title={layout.label}
         >
@@ -219,7 +208,7 @@ export default function Toolbox({
               <span>Dark Mode</span>
               <AnimatedSwitch 
                 isOn={isDarkMode} 
-                onToggle={onThemeToggle} 
+                onToggle={onToggleDarkMode} 
               />
             </div>
           </div>
@@ -258,9 +247,10 @@ export default function Toolbox({
           <button 
             className="save-button" 
             onClick={onSave}
+            disabled={isLoading}
             title="Save Diagram"
           >
-            <Save size={18} />
+            {isLoading ? <Save size={18} /> : <Save size={18} />}
             <span>Save Diagram</span>
           </button>
         </div>
@@ -300,30 +290,21 @@ export default function Toolbox({
                   </motion.div>
                 )}
               </motion.button>
-
               <AnimatePresence>
-                {expandedSection === section.id && (
+                {expandedSection === section.id && isHovered && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2, ease: "easeInOut" }}
                     className="section-content"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
                   >
                     {section.content}
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              <div className="toolbox-divider" />
             </div>
           ))}
-        </div>
-
-        <div className="toolbox-footer">
-          <div className="toolbox-hint">
-            Hover to expand • Click section to open
-          </div>
         </div>
       </motion.div>
     </motion.div>

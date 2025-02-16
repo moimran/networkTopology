@@ -70,6 +70,7 @@ const InterfaceSelectModal: React.FC<InterfaceSelectModalProps> = ({
           Delete Node
         </button>
       </div>
+
       <select 
         onChange={handleSelect}
         defaultValue=""

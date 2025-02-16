@@ -2,19 +2,19 @@
 
 .edge-context-menu {
   composes: context-menu-base;
+  min-width: 150px;
+  position: fixed;
   background: rgba(16, 46, 82, 0.95);
   backdrop-filter: blur(40px);
   border-radius: 4px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  padding: 8px;
-  min-width: 120px;
+  padding: 12px;
   z-index: 1000;
   color: #fff;
 }
 
 .edge-context-menu .delete-button {
   composes: context-menu-button;
-  width: 100%;
   background: none;
   border: none;
   padding: 8px 12px;
@@ -27,6 +27,7 @@
   font-size: 14px;
   font-weight: 500;
   transition: background-color 0.2s;
+  width: 100%;
 }
 
 .edge-context-menu .delete-button:hover {
@@ -34,6 +35,5 @@
 }
 
 .edge-context-menu .delete-button svg {
-  flex-shrink: 0;
   stroke: currentColor;
 }

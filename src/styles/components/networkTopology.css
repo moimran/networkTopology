@@ -9,10 +9,15 @@
   background-color: #1a1a1a;
 }
 
-.network-flow-wrapper {
+/* ReactFlow wrapper styles */
+.reactflow-wrapper {
   width: 100%;
   height: 100%;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* Make sure ReactFlow container takes full size */
@@ -127,7 +132,7 @@
   stroke: var(--edge-selected-color);
 }
 
-/* Theme styles */
+/* Dark mode styles */
 .dark-theme {
   background: #1a1a1a;
 }
@@ -202,4 +207,22 @@
 
 .light-theme .react-flow__edge.selected .react-flow__edge-path {
   stroke: #0066cc;
+}
+
+/* Ensure proper z-index stacking */
+.network-topology {
+  z-index: 0;
+}
+
+.icon-sidebar {
+  z-index: 2;
+}
+
+.toolbox-container {
+  z-index: 2;
+}
+
+.interface-modal,
+.edge-context-menu {
+  z-index: 3;
 }
