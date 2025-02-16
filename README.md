@@ -77,3 +77,6 @@ The build output will be in the `dist/` directory.
 - TypeScript
 - Express.js
 - Node.js
+
+## url to load config
+[text](http://localhost:5173/?restore=/configs/network-config-1739670158423.json)
