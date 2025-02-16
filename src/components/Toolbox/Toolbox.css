@@ -240,6 +240,54 @@
   text-align: center;
 }
 
+/* Background options */
+.background-options {
+  padding: 8px;
+}
+
+.background-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.background-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.background-button:hover {
+  background: var(--hover-color);
+}
+
+.background-button.active {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.background-icon {
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.background-label {
+  font-size: 13px;
+}
+
 /* Footer styles */
 .toolbox-footer {
   padding: 15px;

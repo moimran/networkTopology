@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Share2, Layout, ChevronDown, Eye, Moon, Save } from "lucide-react";
-import { Edge, useReactFlow } from '@xyflow/react';
+import { Settings, Share2, Layout, ChevronDown, Eye, Moon, Save, Grid } from "lucide-react";
+import { Edge, useReactFlow, BackgroundVariant } from '@xyflow/react';
 import './Toolbox.css';
 
 // Custom Animated Switch Component
@@ -59,6 +59,8 @@ interface ToolboxProps {
   selectedEdges: string[];
   onSave: () => void;
   isLoading: boolean;
+  backgroundType: BackgroundVariant;
+  onBackgroundChange: (type: BackgroundVariant) => void;
 }
 
 const edgeTypes = [
@@ -73,6 +75,12 @@ const layoutTypes = [
   { value: 'vertical', label: 'Vertical Tree', icon: '⟷' },
   { value: 'radial', label: 'Radial', icon: '◎' },
   { value: 'force', label: 'Force-Directed', icon: '⚡' },
+];
+
+const backgroundTypes = [
+  { value: BackgroundVariant.Dots, label: 'Dots', icon: '•' },
+  { value: BackgroundVariant.Lines, label: 'Lines', icon: '┃' },
+  { value: BackgroundVariant.Cross, label: 'Cross', icon: '╋' },
 ];
 
 interface ToolboxSection {
@@ -99,7 +107,9 @@ export default function Toolbox({
   onToggleDarkMode,
   currentLayout,
   onSave,
-  isLoading
+  isLoading,
+  backgroundType,
+  onBackgroundChange
 }: ToolboxProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -156,6 +166,25 @@ export default function Toolbox({
     </div>
   );
 
+  const backgroundButtons = (
+    <div className="background-buttons">
+      {backgroundTypes.map((type) => (
+        <button
+          key={type.value}
+          className={`background-button ${type.value === backgroundType ? 'active' : ''}`}
+          onClick={() => {
+            console.log('Clicked background type:', type.value);
+            onBackgroundChange(type.value);
+          }}
+          title={type.label}
+        >
+          <span className="background-icon">{type.icon}</span>
+          <span className="background-label">{type.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+
   const toggleSection = (sectionId: string) => {
     setExpandedSection(prev => prev === sectionId ? null : sectionId);
   };
@@ -166,6 +195,19 @@ export default function Toolbox({
       title: 'Edge Types',
       icon: <Share2 size={18} />,
       content: edgeTypeButtons
+    },
+    {
+      id: 'background',
+      title: 'Background',
+      icon: <Grid size={18} />,
+      content: (
+        <div className="background-options">
+          <div className="background-section">
+            <h4>Background Type</h4>
+            {backgroundButtons}
+          </div>
+        </div>
+      )
     },
     {
       id: 'layout-options',

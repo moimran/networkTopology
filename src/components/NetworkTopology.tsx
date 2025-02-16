@@ -79,9 +79,14 @@ const NetworkTopology = () => {
   const [currentEdgeType, setCurrentEdgeType] = useState('straight');
   const [showLabels, setShowLabels] = useState(false);
   const [iconCategories, setIconCategories] = useState<Record<string, string[]>>({});
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentLayout, setCurrentLayout] = useState('horizontal');
   const [isLoading, setIsLoading] = useState(false);
+  const [backgroundType, setBackgroundType] = useState<BackgroundVariant>(BackgroundVariant.Dots);
+  const [backgroundConfig, setBackgroundConfig] = useState({
+    gap: 12,
+    size: 1,
+  });
 
   // Custom hooks for managing nodes and edges
   const { edges, onEdgesChange, setEdges } = useNetworkEdges();
@@ -316,7 +321,9 @@ const NetworkTopology = () => {
         currentEdgeType,
         showLabels,
         isDarkMode,
-        currentLayout
+        currentLayout,
+        backgroundType,
+        backgroundConfig,
       };
 
       logger.debug('Saving network topology', { 
@@ -331,7 +338,7 @@ const NetworkTopology = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [nodes, edges, currentEdgeType, showLabels, isDarkMode, currentLayout]);
+  }, [nodes, edges, currentEdgeType, showLabels, isDarkMode, currentLayout, backgroundType, backgroundConfig]);
 
   // Handle restoring a topology configuration
   const restoreConfig = useCallback(async (configUrl: string) => {
@@ -351,8 +358,13 @@ const NetworkTopology = () => {
       // Update other state
       setCurrentEdgeType(config.currentEdgeType || 'straight');
       setShowLabels(config.showLabels || false);
-      setIsDarkMode(config.isDarkMode || true);
+      setIsDarkMode(config.isDarkMode || false);
       setCurrentLayout(config.currentLayout || 'horizontal');
+      setBackgroundType(config.backgroundType || BackgroundVariant.Dots);
+      setBackgroundConfig(config.backgroundConfig || {
+        gap: 12,
+        size: 1,
+      });
 
       // Update viewport if available
       if (reactFlowInstance.current && config.viewport) {
@@ -410,8 +422,20 @@ const NetworkTopology = () => {
     });
   }, [nodes, loadNodeConfig]);
 
+  // Handle background type change
+  const handleBackgroundChange = useCallback((type: BackgroundVariant) => {
+    console.log('Changing background to:', type);
+    setBackgroundType(type);
+  }, []);
+
+  // Handle dark mode toggle
+  const handleDarkModeToggle = useCallback(() => {
+    console.log('Toggling dark mode');
+    setIsDarkMode(prev => !prev);
+  }, []);
+
   return (
-    <div className="network-topology">
+    <div className={`network-topology ${isDarkMode ? 'dark' : 'light'}`}>
       <ReactFlowProvider>
         <div 
           className="reactflow-wrapper" 
@@ -441,8 +465,12 @@ const NetworkTopology = () => {
             fitView
             style={{ width: '100%', height: '100%' }}
           >
+            <Background 
+              variant={backgroundType}
+              gap={backgroundConfig.gap}
+              size={backgroundConfig.size}
+            />
             <Controls position="bottom-right" className="controls-container" />
-            <Background variant={BackgroundVariant.Cross} gap={12} size={1} />
           </ReactFlow>
         </div>
 
@@ -458,12 +486,16 @@ const NetworkTopology = () => {
           showLabels={showLabels}
           onToggleLabels={handleToggleLabels}
           isDarkMode={isDarkMode}
-          onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+          onToggleDarkMode={handleDarkModeToggle}
           currentLayout={currentLayout}
           onLayoutChange={setCurrentLayout}
           selectedEdges={selectedEdges}
           onSave={handleSaveConfig}
           isLoading={isLoading}
+          backgroundType={backgroundType}
+          onBackgroundChange={handleBackgroundChange}
+          backgroundConfig={backgroundConfig}
+          setBackgroundConfig={setBackgroundConfig}
         />
         
         {interfaceModal.show && (
