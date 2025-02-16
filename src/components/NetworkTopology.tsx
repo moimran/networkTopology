@@ -442,7 +442,7 @@ const NetworkTopology = () => {
             style={{ width: '100%', height: '100%' }}
           >
             <Controls position="bottom-right" className="controls-container" />
-            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+            <Background variant={BackgroundVariant.Cross} gap={12} size={1} />
           </ReactFlow>
         </div>
 

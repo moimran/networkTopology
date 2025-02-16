@@ -192,26 +192,6 @@ export default function Toolbox({
       icon: <Settings size={18} />,
       content: (
         <div className="settings-options">
-          <div className="settings-item">
-            <div className="settings-label">
-              <Eye size={16} />
-              <span>Show Labels</span>
-              <AnimatedSwitch 
-                isOn={showLabels} 
-                onToggle={onToggleLabels} 
-              />
-            </div>
-          </div>
-          <div className="settings-item">
-            <div className="settings-label">
-              <Moon size={16} />
-              <span>Dark Mode</span>
-              <AnimatedSwitch 
-                isOn={isDarkMode} 
-                onToggle={onToggleDarkMode} 
-              />
-            </div>
-          </div>
           <button className="toolbox-button">Configure Device</button>
           <button className="toolbox-button">Device Templates</button>
           <button className="toolbox-button">Interface Settings</button>
@@ -237,76 +217,97 @@ export default function Toolbox({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <motion.div 
-        className="toolbox-panel"
-        animate={{ height: '100%' }}
-        transition={{ duration: 0.2 }}
-      >
-        {/* Save Button */}
-        <div className="save-button-container">
-          <button 
-            className="save-button" 
-            onClick={onSave}
-            disabled={isLoading}
-            title="Save Diagram"
-          >
-            {isLoading ? <Save size={18} /> : <Save size={18} />}
-            <span>Save Diagram</span>
-          </button>
-        </div>
+        <motion.div 
+          className="toolbox-panel"
+          animate={{ height: '100%' }}
+          transition={{ duration: 0.2 }}
+        >
+          {/* Control Icons */}
+          <div className="save-icon-container">
+            <motion.button 
+              className="icon-button"
+              onClick={onSave}
+              disabled={isLoading}
+              title="Save Diagram"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Save size={18} />
+            </motion.button>
 
-        {/* Sections */}
-        <div className="toolbox-content">
-          {sections.map((section) => (
-            <div key={section.id} className="toolbox-section">
-              <motion.button 
-                className="section-header"
-                onClick={() => toggleSection(section.id)}
-                animate={{ 
-                  paddingRight: isHovered ? "10px" : "0px",
-                  paddingLeft: isHovered ? "10px" : "0px",
-                  justifyContent: isHovered ? "space-between" : "center",
-                  width: isHovered ? "100%" : "40px",
-                }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className={`section-title ${!isHovered ? 'icon-only' : ''}`}>
-                  <span className="section-icon">{section.icon}</span>
-                  {isHovered && <span>{section.title}</span>}
-                </div>
-                {isHovered && (
-                  <motion.div 
-                    className="section-chevron"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ 
-                      opacity: 1, 
-                      scale: 1,
-                      rotate: expandedSection === section.id ? 180 : 0 
-                    }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChevronDown size={16} />
-                  </motion.div>
-                )}
-              </motion.button>
-              <AnimatePresence>
-                {expandedSection === section.id && isHovered && (
-                  <motion.div
-                    className="section-content"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {section.content}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+            <motion.button 
+              className={`icon-button ${showLabels ? 'active' : ''}`}
+              onClick={onToggleLabels}
+              title={`${showLabels ? 'Hide' : 'Show'} Labels`}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Eye size={18} />
+            </motion.button>
+
+            <motion.button 
+              className={`icon-button ${isDarkMode ? 'active' : ''}`}
+              onClick={onToggleDarkMode}
+              title={`${isDarkMode ? 'Light' : 'Dark'} Mode`}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Moon size={18} />
+            </motion.button>
+          </div>
+
+          {/* Sections */}
+          <div className="toolbox-content">
+            {sections.map((section) => (
+              <div key={section.id} className="toolbox-section">
+                <motion.button 
+                  className="section-header"
+                  onClick={() => toggleSection(section.id)}
+                  animate={{ 
+                    paddingRight: isHovered ? "10px" : "0px",
+                    paddingLeft: isHovered ? "10px" : "0px",
+                    justifyContent: isHovered ? "space-between" : "center",
+                    width: isHovered ? "100%" : "40px",
+                  }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className={`section-title ${!isHovered ? 'icon-only' : ''}`}>
+                    <span className="section-icon">{section.icon}</span>
+                    {isHovered && <span>{section.title}</span>}
+                  </div>
+                  {isHovered && (
+                    <motion.div 
+                      className="section-chevron"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ 
+                        opacity: 1, 
+                        scale: 1,
+                        rotate: expandedSection === section.id ? 180 : 0 
+                      }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown size={16} />
+                    </motion.div>
+                  )}
+                </motion.button>
+                <AnimatePresence>
+                  {expandedSection === section.id && isHovered && (
+                    <motion.div
+                      className="section-content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {section.content}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </motion.div>
     </motion.div>
   );
 }

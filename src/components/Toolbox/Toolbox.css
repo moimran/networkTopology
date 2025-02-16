@@ -189,10 +189,10 @@
 
 /* Layout section styles */
 .layout-section {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
-.layout-section h4 {
+.layout-section h5 {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
   margin: 0 0 8px 0;
@@ -240,100 +240,6 @@
   text-align: center;
 }
 
-/* Settings item styles */
-.settings-item {
-  margin-bottom: 12px;
-}
-
-.settings-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
-}
-
-.settings-label svg {
-  opacity: 0.7;
-}
-
-/* Save button styles */
-.save-button-container {
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.save-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  background: var(--primary-color);
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
-}
-
-.save-button:hover:not(:disabled) {
-  background: var(--primary-color-dark);
-}
-
-.save-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.save-button svg {
-  transition: transform 0.2s;
-}
-
-.save-button:disabled svg {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.save-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px;
-  background: rgba(0, 122, 255, 0.15);
-  border: 1px solid rgba(0, 122, 255, 0.3);
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.save-button:hover {
-  background: rgba(0, 122, 255, 0.25);
-  border-color: rgba(0, 122, 255, 0.4);
-  transform: translateY(-1px);
-}
-
-.save-button:active {
-  transform: translateY(0);
-}
-
-.save-button svg {
-  opacity: 0.9;
-}
-
 /* Footer styles */
 .toolbox-footer {
   padding: 15px;
@@ -378,4 +284,44 @@
 
 .animated-switch[data-is-on="false"] {
   background-color: #cccccc !important;
+}
+
+/* Save icon container */
+.save-icon-container {
+  position: relative;
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.icon-button {
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  background-color: var(--hover-color);
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.icon-button.active {
+  color: #4CAF50;
+}
+
+.icon-button.active:hover {
+  background-color: rgba(76, 175, 80, 0.1);
 }
