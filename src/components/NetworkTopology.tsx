@@ -441,7 +441,7 @@ const NetworkTopology = () => {
             fitView
             style={{ width: '100%', height: '100%' }}
           >
-            <Controls />
+            <Controls position="bottom-right" className="controls-container" />
             <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
           </ReactFlow>
         </div>
