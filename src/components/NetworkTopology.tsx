@@ -1,40 +1,35 @@
-import React, { useState, DragEvent, useCallback, useRef, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
-  ReactFlowInstance,
-  ConnectionMode,
-  NodeOrigin,
-  Controls,
   Node,
   Background,
   BackgroundVariant,
-  Edge,
-  Connection,
+  Controls,
+  ConnectionMode,
+  ReactFlowInstance,
+  NodeOrigin,
   MarkerType,
-  XYPosition
 } from '@xyflow/react';
 
-import { useDeviceNodes } from '../hooks/useDeviceNodes';
-import { useNetworkEdges } from '../hooks/useNetworkEdges';
+import IconSidebar from './IconSidebar/IconSidebar';
+import Toolbox from './Toolbox/Toolbox';
+import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
+import EdgeContextMenu from './EdgeContextMenu/EdgeContextMenu';
+import NetworkNode from './NetworkNode/NetworkNode';
+import FloatingEdge from './FloatingEdge/FloatingEdge';
+import { logger } from '../utils/logger';
 import { useNetworkNodes } from '../hooks/useNetworkNodes';
+import { useNetworkEdges } from '../hooks/useNetworkEdges';
 import { useInterfaceModal } from '../hooks/useInterfaceModal';
 import { useEdgeContextMenu } from '../hooks/useEdgeContextMenu';
 import { useEdgeInteractions } from '../hooks/useEdgeInteractions';
-import { logger } from '../utils/logger';
 import { useEdgeStore } from '../store/edgeStore';
 import { saveConfig } from '../api/saveConfig';
-import { restoreConfigFromUrl } from '../api/loadConfig';
+import { restoreConfigFromUrl, loadDeviceConfig } from '../api/loadConfig';
 
-import NetworkNode from './NetworkNode/NetworkNode';
-import InterfaceSelectModal from './InterfaceSelectModal/InterfaceSelectModal';
-import FloatingEdge from './FloatingEdge/FloatingEdge';
-import Toolbox from './Toolbox/Toolbox';
-import IconSidebar from './IconSidebar/IconSidebar';
-import EdgeContextMenu from './EdgeContextMenu/EdgeContextMenu';
-import './FloatingEdge/FloatingEdge.css';
 import '../styles/components/networkTopology.css';
-import { DEVICE_CONFIGS_PATH } from '../config/paths';
+import './FloatingEdge/FloatingEdge.css';
 
 /**
  * Custom node types configuration
@@ -338,8 +333,8 @@ const NetworkTopology = () => {
     }
   }, [nodes, edges, currentEdgeType, showLabels, isDarkMode, currentLayout]);
 
-  // Handle loading a topology configuration
-  const handleLoadConfig = useCallback(async (configUrl: string) => {
+  // Handle restoring a topology configuration
+  const restoreConfig = useCallback(async (configUrl: string) => {
     try {
       setIsLoading(true);
       logger.debug('Loading network topology', { configUrl });
@@ -374,6 +369,46 @@ const NetworkTopology = () => {
       setIsLoading(false);
     }
   }, []);
+
+  // Parse URL parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const restoreUrl = urlParams.get('restore');
+    if (restoreUrl) {
+      restoreConfig(restoreUrl);
+    }
+  }, [restoreConfig]);
+
+  // Function to load device config when needed
+  const loadNodeConfig = useCallback(async (node: Node) => {
+    if (node.data.iconPath && !node.data.config) {
+      try {
+        const config = await loadDeviceConfig(node.data.iconPath);
+        // Update node with loaded config
+        const updatedNode = {
+          ...node,
+          data: {
+            ...node.data,
+            config
+          }
+        };
+        setNodes((nds) => 
+          nds.map((n) => (n.id === node.id ? updatedNode : n))
+        );
+      } catch (error) {
+        logger.error(`Error loading config for node ${node.id}:`, error);
+      }
+    }
+  }, [setNodes]);
+
+  // Load configs for nodes when they are selected or connected
+  useEffect(() => {
+    nodes.forEach((node) => {
+      if (node.selected) {
+        loadNodeConfig(node);
+      }
+    });
+  }, [nodes, loadNodeConfig]);
 
   return (
     <div className="network-topology">
