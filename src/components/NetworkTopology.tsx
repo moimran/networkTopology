@@ -10,6 +10,8 @@ import {
   ReactFlowInstance,
   NodeOrigin,
   MarkerType,
+  MiniMap,
+  Panel,
 } from '@xyflow/react';
 
 import IconSidebar from './IconSidebar/IconSidebar';
@@ -494,6 +496,13 @@ const NetworkTopology = () => {
               size={backgroundConfig.size}
             />
             <Controls position="bottom-right" className="controls-container" />
+            <MiniMap />
+            <Panel position="top-center" className="panel-container">
+              <div className="panel-content">
+                <h3>Panel Content</h3>
+                <p>This is the panel content.</p>
+              </div>
+            </Panel>
           </ReactFlow>
         </div>
 
