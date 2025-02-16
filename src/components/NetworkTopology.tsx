@@ -89,7 +89,7 @@ const NetworkTopology = () => {
   const { interfaceModal, onNodeContextMenu, closeInterfaceModal, setInterfaceModal } = useInterfaceModal();
   const { edgeContextMenu, onEdgeContextMenu, closeEdgeContextMenu } = useEdgeContextMenu(setEdges);
   const { onEdgeClick, onEdgeTypeChange, handleToggleLabels } = useEdgeInteractions(edges, setEdges, showLabels, setShowLabels);
-  const { setSelectedEdges } = useEdgeStore();
+  const { selectedEdges } = useEdgeStore();
 
   // Connection state
   const [pendingConnection, setPendingConnection] = useState<{
@@ -279,12 +279,12 @@ const NetworkTopology = () => {
    * Clear edge selection when clicking on nodes or dragging
    */
   const onNodeClick = useCallback(() => {
-    setSelectedEdges([]);
-  }, [setSelectedEdges]);
+    // setSelectedEdges([]);
+  }, []);
 
   const onNodeDragStart = useCallback(() => {
-    setSelectedEdges([]);
-  }, [setSelectedEdges]);
+    // setSelectedEdges([]);
+  }, []);
 
   // Handle edge deletion
   const handleDeleteEdge = useCallback(() => {
@@ -461,7 +461,7 @@ const NetworkTopology = () => {
           onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
           currentLayout={currentLayout}
           onLayoutChange={setCurrentLayout}
-          selectedEdges={[]}
+          selectedEdges={selectedEdges}
           onSave={handleSaveConfig}
           isLoading={isLoading}
         />
