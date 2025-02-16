@@ -82,6 +82,7 @@ const NetworkTopology = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentLayout, setCurrentLayout] = useState('horizontal');
   const [isLoading, setIsLoading] = useState(false);
+  const [defaultViewport] = useState({ x: 0, y: 0, zoom: 1 });
   const [backgroundType, setBackgroundType] = useState<BackgroundVariant>(BackgroundVariant.Dots);
   const [backgroundConfig, setBackgroundConfig] = useState({
     gap: 12,
@@ -156,32 +157,51 @@ const NetworkTopology = () => {
     event.dataTransfer.effectAllowed = 'move';
   }, []);
 
+  /**
+   * Handle dropping a new node onto the flow
+   * Maintains zoom level and viewport position when adding new nodes
+   */
   const onDrop = useCallback(
-    async (event: DragEvent) => {
+    async (event: React.DragEvent) => {
       event.preventDefault();
 
-      const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
+      if (!reactFlowWrapper.current || !reactFlowInstance.current) return;
+
+      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const iconPath = event.dataTransfer.getData('application/networknode');
 
-      if (!iconPath || !reactFlowBounds || !reactFlowInstance.current) {
-        logger.warn('Invalid drop event', { 
-          hasIcon: !!iconPath, 
-          hasBounds: !!reactFlowBounds, 
-          hasInstance: !!reactFlowInstance.current 
-        });
+      if (!iconPath) {
+        logger.warn('No icon path provided in drop event');
         return;
       }
 
-      const position = reactFlowInstance.current.screenToFlowPosition({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      });
+      // Get the current viewport to maintain zoom level
+      const viewport = reactFlowInstance.current.getViewport();
+
+      // Calculate the position in the flow where the node was dropped
+      const position = {
+        x: (event.clientX - reactFlowBounds.left - viewport.x) / viewport.zoom,
+        y: (event.clientY - reactFlowBounds.top - viewport.y) / viewport.zoom
+      };
 
       try {
+        // Add debug logging for position calculation
+        logger.debug('Node drop position:', { 
+          position, 
+          viewport,
+          bounds: {
+            left: reactFlowBounds.left,
+            top: reactFlowBounds.top
+          }
+        });
+        
         const newNode = await createNodeWithConfig(position, iconPath);
         if (newNode) {
           setNodes((nds) => nds.concat(newNode));
           logger.debug('Added new node to flow', { nodeId: newNode.id });
+          
+          // Maintain the current zoom level and viewport position
+          reactFlowInstance.current.setViewport({ x: 0, y: 0, zoom: viewport.zoom });
         }
       } catch (error) {
         logger.error('Error handling node drop', error);
@@ -462,7 +482,10 @@ const NetworkTopology = () => {
             defaultEdgeOptions={defaultEdgeOptions}
             connectionMode={ConnectionMode.Loose}
             nodeOrigin={nodeOrigin}
-            fitView
+            defaultViewport={defaultViewport}
+            minZoom={0.1}
+            maxZoom={2}
+            fitView={nodes.length === 0}
             style={{ width: '100%', height: '100%' }}
           >
             <Background 
